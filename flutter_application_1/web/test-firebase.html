@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Web Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background-color: #0056b3; }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Web Configuration Test</h1>
+        <div id="status" class="status info">Initializing Firebase...</div>
+        
+        <h2>Login Form</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+        <button onclick="login()">Login</button>
+        
+        <h2>Register Form</h2>
+        <div class="form-group">
+            <label for="reg-name">Name:</label>
+            <input type="text" id="reg-name" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+            <label for="reg-email">Email:</label>
+            <input type="email" id="reg-email" placeholder="Enter your email">
+        </div>
+        <div class="form-group">
+            <label for="reg-phone">Phone:</label>
+            <input type="tel" id="reg-phone" placeholder="Enter your phone">
+        </div>
+        <div class="form-group">
+            <label for="reg-password">Password:</label>
+            <input type="password" id="reg-password" placeholder="Enter your password">
+        </div>
+        <button onclick="register()">Register</button>
+        
+        <h2>Firebase Info</h2>
+        <div id="firebase-info"></div>
+    </div>
+
+    <!-- Firebase SDK v9 Modular -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, doc, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLix4E5Z3dSna8spD2Kkw2Iav3g4ZcoUw",
+            authDomain: "fir-tutorial-708dd.firebaseapp.com",
+            projectId: "fir-tutorial-708dd",
+            storageBucket: "fir-tutorial-708dd.firebasestorage.app",
+            messagingSenderId: "249897394934",
+            appId: "1:249897394934:web:3d20e71e216a7c029402d7"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        console.log('✅ Firebase initialized successfully for web');
+        
+        // Initialize Firebase services
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebaseApp = app;
+        window.firebaseAuth = auth;
+        window.firebaseDB = db;
+        
+        // Update status
+        document.getElementById('status').innerHTML = '✅ Firebase initialized successfully';
+        document.getElementById('status').className = 'status success';
+        
+        // Display Firebase info
+        document.getElementById('firebase-info').innerHTML = `
+            <p><strong>Project ID:</strong> ${firebaseConfig.projectId}</p>
+            <p><strong>Auth Domain:</strong> ${firebaseConfig.authDomain}</p>
+            <p><strong>Storage Bucket:</strong> ${firebaseConfig.storageBucket}</p>
+            <p><strong>App ID:</strong> ${firebaseConfig.appId}</p>
+            <p><strong>Firebase App Name:</strong> ${app.name}</p>
+        `;
+        
+        console.log('🔥 Firebase Auth ready');
+        console.log('📊 Firebase Firestore ready');
+        
+        // Global functions for button clicks
+        window.login = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                updateStatus('Please enter email and password', 'error');
+                return;
+            }
+            
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                updateStatus(`✅ Login successful! User: ${userCredential.user.email}`, 'success');
+                console.log('Login successful:', userCredential.user);
+            } catch (error) {
+                updateStatus(`❌ Login failed: ${error.message}`, 'error');
+                console.error('Login error:', error);
+            }
+        };
+        
+        window.register = async function() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const password = document.getElementById('reg-password').value;
+            
+            if (!name || !email || !phone || !password) {
+                updateStatus('Please fill all registration fields', 'error');
+                return;
+            }
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                
+                // Store additional user data in Firestore
+                await set(doc(db, 'users', userCredential.user.uid), {
+                    uid: userCredential.user.uid,
+                    email: email,
+                    name: name,
+                    phone: phone,
+                    createdAt: serverTimestamp(),
+                    isActive: true
+                });
+                
+                updateStatus(`✅ Registration successful! User: ${userCredential.user.email}`, 'success');
+                console.log('Registration successful:', userCredential.user);
+            } catch (error) {
+                updateStatus(`❌ Registration failed: ${error.message}`, 'error');
+                console.error('Registration error:', error);
+            }
+        };
+        
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+        }
+    </script>
+</body>
+</html>
