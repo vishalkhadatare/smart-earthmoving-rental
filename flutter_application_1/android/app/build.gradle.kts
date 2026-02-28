@@ -23,7 +23,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
@@ -37,9 +37,15 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
             
-            // Enable code shrinking and resource shrinking
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // Disable shrinking for better compatibility across devices
+            isMinifyEnabled = false
+            isShrinkResources = false
+            
+            // ProGuard rules (if minification is enabled in future)
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
         
         debug {
@@ -51,12 +57,11 @@ android {
         }
     }
     
-    // Optimize build performance
-    dexOptions {
-        preDexLibraries = false
-        maxProcessCount = 8
-        javaMaxHeapSize = "2g"
-    }
+    // dexOptions {
+    //     preDexLibraries = false
+    //     maxProcessCount = 8
+    //     javaMaxHeapSize = "2g"
+    // }
 }
 
 flutter {
