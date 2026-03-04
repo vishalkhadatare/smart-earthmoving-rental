@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Background platform -->
+  <rect x="0" y="240" width="400" height="60" fill="#FFF3E0" rx="4"/>
+  
+  <!-- Phone/app mockup -->
+  <rect x="140" y="40" width="120" height="200" rx="16" fill="white" stroke="#FF6B00" stroke-width="3"/>
+  <!-- Phone notch -->
+  <rect x="175" y="48" width="50" height="6" rx="3" fill="#FFE0B2"/>
+  <!-- App header -->
+  <rect x="152" y="65" width="96" height="20" rx="4" fill="#FF6B00"/>
+  <rect x="160" y="72" width="40" height="6" rx="3" fill="white"/>
+  <!-- Equipment card 1 -->
+  <rect x="152" y="95" width="96" height="35" rx="6" fill="#FFF3E0"/>
+  <rect x="158" y="101" width="20" height="20" rx="4" fill="#FF8C3A"/>
+  <rect x="183" y="103" width="40" height="5" rx="2" fill="#FF6B00"/>
+  <rect x="183" y="112" width="30" height="4" rx="2" fill="#FFB74D"/>
+  <rect x="232" y="103" width="12" height="12" rx="6" fill="#4CAF50"/>
+  <!-- Equipment card 2 -->
+  <rect x="152" y="138" width="96" height="35" rx="6" fill="#FFF3E0"/>
+  <rect x="158" y="144" width="20" height="20" rx="4" fill="#FFB74D"/>
+  <rect x="183" y="146" width="45" height="5" rx="2" fill="#FF6B00"/>
+  <rect x="183" y="155" width="25" height="4" rx="2" fill="#FFB74D"/>
+  <rect x="232" y="146" width="12" height="12" rx="6" fill="#4CAF50"/>
+  <!-- Book now button -->
+  <rect x="160" y="185" width="80" height="24" rx="12" fill="#FF6B00"/>
+  <rect x="175" y="194" width="50" height="6" rx="3" fill="white"/>
+  <!-- Phone home indicator -->
+  <rect x="180" y="222" width="40" height="4" rx="2" fill="#FFE0B2"/>
+  
+  <!-- Checkmark confirmation -->
+  <circle cx="320" cy="100" r="30" fill="#FF6B00" opacity="0.1"/>
+  <circle cx="320" cy="100" r="22" fill="#FF6B00"/>
+  <path d="M308 100 L316 108 L332 92" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Contractor with tools -->
+  <circle cx="70" cy="150" r="16" fill="#FFB74D"/>
+  <!-- Hard hat -->
+  <path d="M54 144 Q70 128 86 144" fill="#FF6B00"/>
+  <rect x="52" y="142" width="36" height="4" rx="2" fill="#E65100"/>
+  <!-- Body -->
+  <rect x="58" y="168" width="24" height="40" rx="4" fill="#FF8C3A"/>
+  <!-- Tool belt -->
+  <rect x="55" y="190" width="30" height="5" rx="2" fill="#E65100"/>
+  <!-- Arms -->
+  <line x1="58" y1="178" x2="40" y2="195" stroke="#FFB74D" stroke-width="5" stroke-linecap="round"/>
+  <line x1="82" y1="178" x2="95" y2="185" stroke="#FFB74D" stroke-width="5" stroke-linecap="round"/>
+  <!-- Wrench in hand -->
+  <line x1="93" y1="183" x2="105" y2="170" stroke="#E65100" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="107" cy="168" r="5" fill="none" stroke="#E65100" stroke-width="2"/>
+  <!-- Legs -->
+  <line x1="65" y1="208" x2="62" y2="240" stroke="#E65100" stroke-width="5" stroke-linecap="round"/>
+  <line x1="75" y1="208" x2="78" y2="240" stroke="#E65100" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Calendar icon -->
+  <rect x="310" y="170" width="50" height="45" rx="8" fill="white" stroke="#FF6B00" stroke-width="2"/>
+  <rect x="310" y="170" width="50" height="14" rx="8" fill="#FF6B00"/>
+  <rect x="318" y="192" width="8" height="8" rx="2" fill="#FFE0B2"/>
+  <rect x="330" y="192" width="8" height="8" rx="2" fill="#FF6B00"/>
+  <rect x="342" y="192" width="8" height="8" rx="2" fill="#FFE0B2"/>
+  <rect x="318" y="204" width="8" height="8" rx="2" fill="#FF6B00"/>
+  
+  <!-- Stars rating -->
+  <g transform="translate(60, 100)">
+    <polygon points="8,0 10,5 16,6 12,10 13,16 8,13 3,16 4,10 0,6 6,5" fill="#FF6B00"/>
+  </g>
+  <g transform="translate(80, 100)">
+    <polygon points="8,0 10,5 16,6 12,10 13,16 8,13 3,16 4,10 0,6 6,5" fill="#FF6B00"/>
+  </g>
+  <g transform="translate(30, 110)">
+    <polygon points="6,0 8,4 12,4 9,7 10,12 6,10 2,12 3,7 0,4 4,4" fill="#FFB74D"/>
+  </g>
+</svg>
