@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <!-- Background platform -->
+  <rect x="0" y="240" width="400" height="60" fill="#FFF3E0" rx="4"/>
+  
+  <!-- Civil engineer with blueprint -->
+  <circle cx="120" cy="130" r="16" fill="#FFB74D"/>
+  <!-- Hard hat -->
+  <path d="M104 124 Q120 108 136 124" fill="#FFFFFF"/>
+  <rect x="102" y="122" width="36" height="4" rx="2" fill="#FF6B00"/>
+  <!-- Body with vest -->
+  <rect x="108" y="148" width="24" height="40" rx="4" fill="#FF6B00"/>
+  <rect x="112" y="148" width="16" height="40" rx="3" fill="#FF8C3A"/>
+  <!-- Arms holding clipboard -->
+  <line x1="108" y1="158" x2="88" y2="170" stroke="#FFB74D" stroke-width="5" stroke-linecap="round"/>
+  <line x1="132" y1="158" x2="152" y2="170" stroke="#FFB74D" stroke-width="5" stroke-linecap="round"/>
+  <!-- Clipboard -->
+  <rect x="80" y="165" width="25" height="30" rx="3" fill="white" stroke="#FF6B00" stroke-width="2"/>
+  <line x1="85" y1="175" x2="100" y2="175" stroke="#FFB74D" stroke-width="2"/>
+  <line x1="85" y1="180" x2="98" y2="180" stroke="#FFB74D" stroke-width="2"/>
+  <line x1="85" y1="185" x2="95" y2="185" stroke="#FFB74D" stroke-width="2"/>
+  <!-- Legs -->
+  <line x1="115" y1="188" x2="112" y2="240" stroke="#E65100" stroke-width="5" stroke-linecap="round"/>
+  <line x1="125" y1="188" x2="128" y2="240" stroke="#E65100" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Price comparison chart -->
+  <rect x="200" y="80" width="160" height="120" rx="12" fill="white" stroke="#FFE0B2" stroke-width="2"/>
+  <!-- Chart title -->
+  <rect x="215" y="92" width="60" height="8" rx="3" fill="#FF6B00"/>
+  <!-- Bar chart -->
+  <rect x="220" y="150" width="20" height="40" rx="3" fill="#FF6B00"/>
+  <rect x="250" y="130" width="20" height="60" rx="3" fill="#FF8C3A"/>
+  <rect x="280" y="140" width="20" height="50" rx="3" fill="#FFB74D"/>
+  <rect x="310" y="120" width="20" height="70" rx="3" fill="#FF6B00"/>
+  <!-- Labels -->
+  <rect x="220" y="195" width="20" height="4" rx="2" fill="#FFE0B2"/>
+  <rect x="250" y="195" width="20" height="4" rx="2" fill="#FFE0B2"/>
+  <rect x="280" y="195" width="20" height="4" rx="2" fill="#FFE0B2"/>
+  <rect x="310" y="195" width="20" height="4" rx="2" fill="#FFE0B2"/>
+  
+  <!-- Savings badge -->
+  <circle cx="340" cy="75" r="22" fill="#FF6B00"/>
+  <text x="340" y="72" text-anchor="middle" fill="white" font-size="10" font-weight="bold">SAVE</text>
+  <text x="340" y="84" text-anchor="middle" fill="white" font-size="12" font-weight="bold">30%</text>
+  
+  <!-- Contractor person -->
+  <circle cx="280" cy="230" r="12" fill="#FFB74D"/>
+  <!-- Safety vest -->
+  <rect x="270" y="244" width="20" height="28" rx="3" fill="#FF8C3A"/>
+  <line x1="270" y1="254" x2="258" y2="264" stroke="#FFB74D" stroke-width="4" stroke-linecap="round"/>
+  <line x1="290" y1="254" x2="302" y2="260" stroke="#FFB74D" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Coins -->
+  <ellipse cx="60" cy="220" rx="15" ry="6" fill="#FF6B00"/>
+  <rect x="45" y="214" width="30" height="6" fill="#FF6B00"/>
+  <ellipse cx="60" cy="214" rx="15" ry="6" fill="#FF8C3A"/>
+  <ellipse cx="60" cy="208" rx="15" ry="6" fill="#FF6B00"/>
+  <rect x="45" y="202" width="30" height="6" fill="#FF6B00"/>
+  <ellipse cx="60" cy="202" rx="15" ry="6" fill="#FFB74D"/>
+</svg>
