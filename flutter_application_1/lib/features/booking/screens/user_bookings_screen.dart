@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
@@ -57,7 +59,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
                 onPressed: () => Navigator.pop(context),
               ),
         title: Text(
-          'My Bookings',
+          tr('my_bookings'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -74,11 +76,11 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Active'),
-            Tab(text: 'Done'),
-            Tab(text: 'All'),
+          tabs: [
+            Tab(text: tr('pending')),
+            Tab(text: tr('active')),
+            Tab(text: tr('done')),
+            Tab(text: tr('all')),
           ],
         ),
       ),
@@ -139,7 +141,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'No bookings yet',
+              tr('no_bookings_yet'),
               style: GoogleFonts.poppins(fontSize: 16, color: _sub),
             ),
           ],
@@ -183,7 +185,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
               Expanded(
                 child: Text(
                   booking.equipmentName.isEmpty
-                      ? 'Equipment Booking'
+                      ? tr('equipment_booking')
                       : booking.equipmentName,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
@@ -240,7 +242,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Total Amount',
+                  tr('total_amount'),
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -273,7 +275,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
                   ),
                 ),
                 child: Text(
-                  'Cancel Booking',
+                  tr('cancel_booking'),
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -291,7 +293,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Approved by owner — equipment is ready',
+                  tr('approved_by_owner'),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -309,7 +311,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Rejected by owner',
+                    tr('rejected_by_owner'),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -331,7 +333,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Completed',
+                  tr('completed'),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -372,22 +374,22 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Cancel Booking',
+          tr('cancel_booking'),
           style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
         ),
         content: Text(
-          'Are you sure you want to cancel this booking?',
+          tr('cancel_booking_confirm'),
           style: GoogleFonts.poppins(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('No', style: GoogleFonts.poppins()),
+            child: Text(tr('no'), style: GoogleFonts.poppins()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Yes, Cancel',
+              tr('yes_cancel'),
               style: GoogleFonts.poppins(color: Colors.red),
             ),
           ),
@@ -404,7 +406,7 @@ class _UserBookingsScreenState extends State<UserBookingsScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Booking cancelled' : 'Failed to cancel'),
+        content: Text(ok ? tr('booking_cancelled') : tr('failed_to_cancel')),
         backgroundColor: ok ? Colors.green : Colors.redAccent,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

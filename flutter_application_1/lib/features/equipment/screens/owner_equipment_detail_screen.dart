@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -144,12 +144,12 @@ class _OwnerEquipmentDetailScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: GoogleFonts.poppins()),
+            child: Text(tr('cancel'), style: GoogleFonts.poppins()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
-              'Delete',
+              tr('delete'),
               style: GoogleFonts.poppins(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
@@ -211,6 +211,7 @@ class _OwnerEquipmentDetailScreenState
   // ──────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     final uiModel = EquipmentModel.fromFirestoreModel(_eq);
 
     return Scaffold(
@@ -230,7 +231,7 @@ class _OwnerEquipmentDetailScreenState
           },
         ),
         title: Text(
-          _isEditing ? 'Edit Equipment' : 'Equipment Details',
+          _isEditing ? tr('edit_equipment') : tr('equipment_details'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -265,7 +266,10 @@ class _OwnerEquipmentDetailScreenState
                     children: [
                       const Icon(Icons.edit_rounded, size: 20, color: _accent),
                       const SizedBox(width: 10),
-                      Text('Edit', style: GoogleFonts.poppins(fontSize: 14)),
+                      Text(
+                        tr('edit'),
+                        style: GoogleFonts.poppins(fontSize: 14),
+                      ),
                     ],
                   ),
                 ),
@@ -283,8 +287,8 @@ class _OwnerEquipmentDetailScreenState
                       const SizedBox(width: 10),
                       Text(
                         _eq.availabilityStatus
-                            ? 'Mark Unavailable'
-                            : 'Mark Available',
+                            ? tr('mark_unavailable')
+                            : tr('mark_available'),
                         style: GoogleFonts.poppins(fontSize: 14),
                       ),
                     ],
@@ -301,7 +305,7 @@ class _OwnerEquipmentDetailScreenState
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Delete',
+                        tr('delete'),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: Colors.red,

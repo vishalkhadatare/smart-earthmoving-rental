@@ -1,10 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/favorites_service.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../booking/screens/create_booking_screen.dart';
 import '../../equipment/screens/rc_verification_screen.dart';
 import '../models/equipment_model.dart';
@@ -30,6 +33,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
@@ -45,6 +49,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                     _buildSpecsSection(),
                     _buildProviderCard(context),
                     _buildDescriptionSection(),
+                    _buildReviewsSection(context),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -88,7 +93,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           Expanded(
             child: Center(
               child: Text(
-                'Equipment Details',
+                tr('equipment_details'),
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -99,22 +104,16 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           ),
           GestureDetector(
             onTap: () {
-              // Share equipment details
-              final text =
-                  '${equipment.name} (${equipment.model}) - \u20b9${equipment.pricePerHour.toStringAsFixed(0)}/hr\n${equipment.description}\n\nCheck it out on EquipPro!';
-              Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Equipment details copied to clipboard!',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: _accent,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              // Share on WhatsApp with app link
+              const appLink = 'https://equippro.app';
+              final text = Uri.encodeComponent(
+                '${equipment.name} (${equipment.model}) - ₹${equipment.pricePerHour.toStringAsFixed(0)}/hr\n'
+                '${equipment.description.isNotEmpty ? "${equipment.description}\n" : ""}'
+                'Book now: $appLink',
+              );
+              launchUrl(
+                Uri.parse('https://wa.me/?text=$text'),
+                mode: LaunchMode.externalApplication,
               );
             },
             child: Container(
@@ -165,22 +164,25 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               child: PageView.builder(
                 itemCount: equipment.imageUrls.length,
                 onPageChanged: (i) => setState(() => _currentPage = i),
-                itemBuilder: (_, i) => CachedNetworkImage(
-                  imageUrl: equipment.imageUrls[i],
-                  fit: BoxFit.contain,
-                  width: double.infinity,
-                  height: 240,
-                  placeholder: (_, __) => const Center(
-                    child: SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: _accent,
+                itemBuilder: (_, i) => GestureDetector(
+                  onTap: () => _showZoomedImage(i),
+                  child: CachedNetworkImage(
+                    imageUrl: equipment.imageUrls[i],
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    height: 240,
+                    placeholder: (_, __) => const Center(
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _accent,
+                        ),
                       ),
                     ),
+                    errorWidget: (_, __, ___) => _assetFallback(),
                   ),
-                  errorWidget: (_, __, ___) => _assetFallback(),
                 ),
               ),
             )
@@ -245,7 +247,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Available Now',
+                      tr('available_now'),
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -293,6 +295,16 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showZoomedImage(int startIndex) {
+    showDialog(
+      context: context,
+      builder: (_) => _ZoomedImageGallery(
+        imageUrls: equipment.imageUrls,
+        initialIndex: startIndex,
       ),
     );
   }
@@ -469,16 +481,120 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
   }
 
   Widget _buildSpecsSection() {
-    if (equipment.specs.isEmpty) return const SizedBox.shrink();
+    final eq = equipment;
+    // Check if any spec parameter is filled
+    final hasStructuredSpecs =
+        eq.company.isNotEmpty ||
+        eq.soilType.isNotEmpty ||
+        eq.depth.isNotEmpty ||
+        eq.enginePower.isNotEmpty ||
+        eq.bucketCapacity.isNotEmpty ||
+        eq.area.isNotEmpty ||
+        eq.operatingWeight.isNotEmpty;
 
-    final specIcons = [
-      Icons.scale_rounded,
-      Icons.speed_rounded,
-      Icons.local_gas_station_rounded,
-      Icons.straighten_rounded,
+    if (!hasStructuredSpecs && eq.specs.isEmpty) return const SizedBox.shrink();
+
+    // Build spec rows from structured fields
+    final specRows = <_SpecRow>[
+      if (eq.company.isNotEmpty)
+        _SpecRow(Icons.business_outlined, 'Company', eq.company),
+      if (eq.soilType.isNotEmpty)
+        _SpecRow(Icons.landscape_outlined, 'Soil Type', eq.soilType),
+      if (eq.depth.isNotEmpty)
+        _SpecRow(Icons.vertical_align_bottom_rounded, 'Depth', eq.depth),
+      if (eq.enginePower.isNotEmpty)
+        _SpecRow(Icons.bolt_rounded, 'Engine Power', eq.enginePower),
+      if (eq.bucketCapacity.isNotEmpty)
+        _SpecRow(Icons.water_outlined, 'Bucket Capacity', eq.bucketCapacity),
+      if (eq.area.isNotEmpty)
+        _SpecRow(Icons.crop_square_rounded, 'Area', eq.area),
+      if (eq.operatingWeight.isNotEmpty)
+        _SpecRow(Icons.scale_rounded, 'Operating Weight', eq.operatingWeight),
     ];
 
-    final specLabels = ['Weight', 'Power', 'Fuel', 'Reach'];
+    // Fallback to generic specs list if no structured specs
+    if (specRows.isEmpty) {
+      final specIcons = [
+        Icons.scale_rounded,
+        Icons.speed_rounded,
+        Icons.local_gas_station_rounded,
+        Icons.straighten_rounded,
+      ];
+      final specLabels = [tr('weight'), tr('power'), tr('fuel'), tr('reach')];
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr('specifications'),
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: _dark,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: List.generate(
+                eq.specs.length.clamp(0, 4),
+                (i) => Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: i < eq.specs.length - 1 ? 10 : 0,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: _bg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(
+                          i < specIcons.length
+                              ? specIcons[i]
+                              : Icons.info_outline,
+                          size: 22,
+                          color: _accent,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          eq.specs[i],
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _dark,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          i < specLabels.length ? specLabels[i] : '',
+                          style: GoogleFonts.poppins(fontSize: 10, color: _sub),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,
@@ -498,56 +614,57 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Specifications',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: _dark,
-            ),
-          ),
-          const SizedBox(height: 14),
           Row(
-            children: List.generate(
-              equipment.specs.length.clamp(0, 4),
-              (i) => Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(
-                    right: i < equipment.specs.length - 1 ? 10 : 0,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: _bg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        i < specIcons.length
-                            ? specIcons[i]
-                            : Icons.info_outline,
-                        size: 22,
-                        color: _accent,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        equipment.specs[i],
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _dark,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        i < specLabels.length ? specLabels[i] : '',
-                        style: GoogleFonts.poppins(fontSize: 10, color: _sub),
-                      ),
-                    ],
-                  ),
+            children: [
+              const Icon(Icons.settings_outlined, size: 20, color: _accent),
+              const SizedBox(width: 8),
+              Text(
+                tr('specifications'),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: _dark,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...specRows.map((s) => _buildSpecRow(s)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecRow(_SpecRow s) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(s.icon, size: 20, color: _accent),
+          const SizedBox(width: 12),
+          Text(
+            '${s.label}:',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: _sub,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              s.value,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _dark,
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
@@ -575,7 +692,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Equipment Provider',
+            tr('equipment_provider'),
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -646,7 +763,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           ),
                         ),
                         Text(
-                          ' Provider Rating',
+                          ' ${tr('provider_rating')}',
                           style: GoogleFonts.poppins(fontSize: 12, color: _sub),
                         ),
                       ],
@@ -715,7 +832,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                             ),
                           ),
                           Text(
-                            'Tap to call',
+                            tr('tap_to_call'),
                             style: GoogleFonts.poppins(
                               fontSize: 10,
                               color: _sub,
@@ -743,7 +860,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Call',
+                            tr('call'),
                             style: GoogleFonts.poppins(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -783,7 +900,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About Equipment',
+            tr('about_equipment'),
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -794,6 +911,98 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           Text(
             equipment.description,
             style: GoogleFonts.poppins(fontSize: 13, color: _sub, height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Reviews section ─────────────────────────────────────────
+  Widget _buildReviewsSection(BuildContext context) {
+    final db = FirebaseFirestore.instance;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userName = context.read<AuthProvider>().userName;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(
+                Icons.star_rounded,
+                color: Color(0xFFFFB800),
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Reviews',
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: _dark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // ── Write a review card ──────────────────────────────
+          if (uid != null)
+            _ReviewInputCard(
+              equipment: equipment,
+              uid: uid,
+              userName: userName,
+            ),
+
+          const SizedBox(height: 16),
+
+          // ── Live list of reviews ─────────────────────────────
+          StreamBuilder<QuerySnapshot>(
+            stream: db
+                .collection('reviews')
+                .where('equipmentId', isEqualTo: equipment.id)
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
+            builder: (context, snap) {
+              if (!snap.hasData) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(color: Color(0xFFFF6B00)),
+                  ),
+                );
+              }
+              final docs = snap.data!.docs;
+              if (docs.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: _bg,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'No reviews yet. Be the first!',
+                      style: GoogleFonts.poppins(fontSize: 13, color: _sub),
+                    ),
+                  ),
+                );
+              }
+              final reviews = docs
+                  .map(
+                    (d) => _ReviewModel.fromMap(
+                      d.id,
+                      d.data()! as Map<String, dynamic>,
+                    ),
+                  )
+                  .toList();
+              return Column(
+                children: reviews.map((r) => _ReviewTile(review: r)).toList(),
+              );
+            },
           ),
         ],
       ),
@@ -824,7 +1033,10 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               );
               if (phone.isNotEmpty) {
                 final message = Uri.encodeComponent(
-                  'Hi, I am interested in renting your ${equipment.name} (${equipment.model}). Is it available?',
+                  tr('whatsapp_interest_msg').replaceFirst(
+                    '{}',
+                    '${equipment.name} (${equipment.model})',
+                  ),
                 );
                 launchUrl(
                   Uri.parse(
@@ -835,7 +1047,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Contact info not available',
+                      tr('contact_not_available'),
                       style: GoogleFonts.poppins(),
                     ),
                     backgroundColor: _accent,
@@ -915,7 +1127,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                   shadowColor: _accent.withValues(alpha: 0.3),
                 ),
                 child: Text(
-                  'Book Equipment',
+                  tr('book_equipment'),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -925,6 +1137,460 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Helper class for spec rows ───────────────────────────────
+class _SpecRow {
+  final IconData icon;
+  final String label;
+  final String value;
+  const _SpecRow(this.icon, this.label, this.value);
+}
+
+// ─── Review model ──────────────────────────────────────────────
+class _ReviewModel {
+  final String id;
+  final String userId;
+  final String userName;
+  final double rating;
+  final String comment;
+  final DateTime createdAt;
+  _ReviewModel({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+  });
+  factory _ReviewModel.fromMap(String id, Map<String, dynamic> m) =>
+      _ReviewModel(
+        id: id,
+        userId: m['userId'] as String? ?? '',
+        userName: m['userName'] as String? ?? 'User',
+        rating: (m['rating'] as num?)?.toDouble() ?? 0,
+        comment: m['comment'] as String? ?? '',
+        createdAt: (m['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      );
+}
+
+// ─── Full-screen zoomable image gallery ───────────────────────
+class _ZoomedImageGallery extends StatefulWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+  const _ZoomedImageGallery({
+    required this.imageUrls,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ZoomedImageGallery> createState() => _ZoomedImageGalleryState();
+}
+
+class _ZoomedImageGalleryState extends State<_ZoomedImageGallery> {
+  late final PageController _ctrl;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _ctrl = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _ctrl,
+            itemCount: widget.imageUrls.length,
+            onPageChanged: (i) => setState(() => _current = i),
+            itemBuilder: (_, i) => InteractiveViewer(
+              minScale: 0.8,
+              maxScale: 5.0,
+              child: Center(
+                child: CachedNetworkImage(
+                  imageUrl: widget.imageUrls[i],
+                  fit: BoxFit.contain,
+                  placeholder: (_, __) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+                  errorWidget: (_, __, ___) => const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white54,
+                    size: 60,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Close button
+          Positioned(
+            top: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+          // Page indicator
+          if (widget.imageUrls.length > 1)
+            Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.imageUrls.length,
+                  (i) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _current == i ? 20 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _current == i
+                          ? const Color(0xFFFF6B00)
+                          : Colors.white38,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Review input card (write a review) ───────────────────────
+class _ReviewInputCard extends StatefulWidget {
+  final EquipmentModel equipment;
+  final String uid;
+  final String userName;
+  const _ReviewInputCard({
+    required this.equipment,
+    required this.uid,
+    required this.userName,
+  });
+  @override
+  State<_ReviewInputCard> createState() => _ReviewInputCardState();
+}
+
+class _ReviewInputCardState extends State<_ReviewInputCard> {
+  int _stars = 0;
+  final _ctrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_stars == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please select a star rating',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    setState(() => _submitting = true);
+    try {
+      final db = FirebaseFirestore.instance;
+      final existing = await db
+          .collection('reviews')
+          .where('equipmentId', isEqualTo: widget.equipment.id)
+          .where('userId', isEqualTo: widget.uid)
+          .limit(1)
+          .get();
+      if (existing.docs.isNotEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'You have already reviewed this equipment.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        setState(() => _submitting = false);
+        return;
+      }
+      await db.collection('reviews').add({
+        'equipmentId': widget.equipment.id,
+        'equipmentName': widget.equipment.name,
+        'providerId': widget.equipment.provider.id,
+        'userId': widget.uid,
+        'userName': widget.userName,
+        'rating': _stars.toDouble(),
+        'comment': _ctrl.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      // Recalculate avg rating on equipment doc
+      final allReviews = await db
+          .collection('reviews')
+          .where('equipmentId', isEqualTo: widget.equipment.id)
+          .get();
+      final count = allReviews.docs.length;
+      final avg =
+          allReviews.docs
+              .map((d) => (d.data()['rating'] as num?)?.toDouble() ?? 0)
+              .fold(0.0, (a, b) => a + b) /
+          count;
+      await db.collection('equipment').doc(widget.equipment.id).update({
+        'rating': avg,
+        'reviewCount': count,
+      });
+      if (!mounted) return;
+      setState(() {
+        _stars = 0;
+        _ctrl.clear();
+        _submitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Review submitted!', style: GoogleFonts.poppins()),
+          backgroundColor: const Color(0xFF00C853),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to submit review.',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Write a Review',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1A1A2E),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: List.generate(5, (i) {
+              return GestureDetector(
+                onTap: () => setState(() => _stars = i + 1),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Icon(
+                    i < _stars
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: const Color(0xFFFFB800),
+                    size: 32,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _ctrl,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Share your experience...',
+              hintStyle: GoogleFonts.poppins(
+                fontSize: 13,
+                color: const Color(0xFF8F90A6),
+              ),
+              filled: true,
+              fillColor: const Color(0xFFF7F7F7),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.all(12),
+            ),
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: const Color(0xFF1C1C1E),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: ElevatedButton(
+              onPressed: _submitting ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B00),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: _submitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Submit Review',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Single review tile ────────────────────────────────────────
+class _ReviewTile extends StatelessWidget {
+  final _ReviewModel review;
+  const _ReviewTile({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: const Color(0xFFFFF3E8),
+                child: Text(
+                  review.userName.isNotEmpty
+                      ? review.userName[0].toUpperCase()
+                      : 'U',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFFF6B00),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.userName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (i) => Icon(
+                          i < review.rating.round()
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                          size: 14,
+                          color: const Color(0xFFFFB800),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: const Color(0xFF8F90A6),
+                ),
+              ),
+            ],
+          ),
+          if (review.comment.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              review.comment,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: const Color(0xFF555555),
+                height: 1.5,
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -7,30 +7,30 @@ class AppTheme {
   static ThemeData lightTheme() {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: Colors.white,
         secondary: AppColors.primary,
         onSecondary: Colors.white,
         tertiary: AppColors.primaryLight,
-        surface: AppColors.surfaceLight,
-        onSurface: AppColors.textPrimary,
+        surface: Color(0xFFF7F7F7),
+        onSurface: Color(0xFF1A1A2E),
         error: AppColors.error,
         onError: Colors.white,
       ),
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: const Color(0xFFF7F7F7),
 
       // AppBar theme
       appBarTheme: AppBarTheme(
         elevation: 0,
-        backgroundColor: AppColors.background,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1A2E),
         centerTitle: false,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: const Color(0xFF1A1A2E),
         ),
         iconTheme: const IconThemeData(color: AppColors.primary),
       ),
@@ -45,7 +45,7 @@ class AppTheme {
           vertical: AppSizes.paddingMedium,
         ),
         filled: true,
-        fillColor: AppColors.surfaceLight,
+        fillColor: const Color(0xFFF0F0F0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
           borderSide: const BorderSide(color: AppColors.border),
@@ -120,7 +120,7 @@ class AppTheme {
 
       // Card theme
       cardTheme: CardThemeData(
-        color: AppColors.surfaceLight,
+        color: Colors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
@@ -130,7 +130,7 @@ class AppTheme {
 
       // Chip theme
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.surfaceAlt,
+        backgroundColor: const Color(0xFFEEEEEE),
         selectedColor: AppColors.primary,
         disabledColor: AppColors.textHint,
         labelPadding: const EdgeInsets.symmetric(
@@ -154,7 +154,7 @@ class AppTheme {
 
       // BottomNavigation theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surfaceLight,
+        backgroundColor: Colors.white,
         elevation: 8,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,

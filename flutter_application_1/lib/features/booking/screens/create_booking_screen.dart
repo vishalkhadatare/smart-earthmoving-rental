@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -113,7 +114,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Booking Confirmed!',
+                tr('booking_confirmed'),
                 style: GoogleFonts.poppins(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -122,7 +123,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Provider will respond shortly',
+                tr('provider_will_respond'),
                 style: GoogleFonts.poppins(fontSize: 14, color: _sub),
               ),
             ],
@@ -134,7 +135,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                 Navigator.pop(context, true); // go back
               },
               child: Text(
-                'OK',
+                tr('ok'),
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w700,
                   color: _accent,
@@ -147,7 +148,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(bookingProvider.errorMessage ?? 'Booking failed'),
+          content: Text(bookingProvider.errorMessage ?? tr('booking_failed')),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -160,6 +161,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
@@ -170,7 +172,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Book Equipment',
+          tr('book_equipment'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -252,19 +254,19 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               const SizedBox(height: 24),
 
               // Your Name
-              _label('Your Name *'),
+              _label(tr('your_name_label')),
               const SizedBox(height: 8),
               _field(
                 ctrl: _nameCtrl,
-                hint: 'Full name',
+                hint: tr('full_name_hint'),
                 icon: Icons.person_outline_rounded,
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Name is required' : null,
+                    v == null || v.isEmpty ? tr('name_required') : null,
               ),
               const SizedBox(height: 20),
 
               // Phone
-              _label('Phone *'),
+              _label(tr('phone_label')),
               const SizedBox(height: 8),
               _field(
                 ctrl: _phoneCtrl,
@@ -272,12 +274,12 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                 icon: Icons.phone_outlined,
                 kb: TextInputType.phone,
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Phone is required' : null,
+                    v == null || v.isEmpty ? tr('phone_required') : null,
               ),
               const SizedBox(height: 20),
 
               // Date
-              _label('Booking Date *'),
+              _label(tr('booking_date')),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: _pickDate,
@@ -316,7 +318,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               const SizedBox(height: 20),
 
               // Duration
-              _label('Duration (Hours) *'),
+              _label(tr('duration_hours')),
               const SizedBox(height: 8),
               _field(
                 ctrl: _hoursCtrl,
@@ -325,9 +327,9 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                 kb: TextInputType.number,
                 onChanged: (_) => setState(() {}),
                 validator: (v) {
-                  if (v == null || v.isEmpty) return 'Duration is required';
+                  if (v == null || v.isEmpty) return tr('duration_required');
                   if (int.tryParse(v) == null || int.parse(v) < 1) {
-                    return 'Enter valid hours';
+                    return tr('enter_valid_hours');
                   }
                   return null;
                 },
@@ -335,24 +337,24 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               const SizedBox(height: 20),
 
               // Location
-              _label('Site Address *'),
+              _label(tr('site_address')),
               const SizedBox(height: 8),
               _field(
                 ctrl: _addressCtrl,
-                hint: 'Where the equipment is needed',
+                hint: tr('site_address_hint'),
                 icon: Icons.location_on_outlined,
                 maxLines: 2,
                 validator: (v) =>
-                    v == null || v.isEmpty ? 'Address is required' : null,
+                    v == null || v.isEmpty ? tr('address_required') : null,
               ),
               const SizedBox(height: 20),
 
               // Notes
-              _label('Additional Notes'),
+              _label(tr('additional_notes')),
               const SizedBox(height: 8),
               _field(
                 ctrl: _notesCtrl,
-                hint: 'Any special requirements...',
+                hint: tr('special_requirements_hint'),
                 icon: Icons.notes_rounded,
                 maxLines: 3,
               ),
@@ -369,18 +371,18 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                 child: Column(
                   children: [
                     _priceRow(
-                      'Rate',
+                      tr('rate'),
                       '₹${widget.hourlyRate.toStringAsFixed(0)}/hr',
                     ),
-                    _priceRow('Duration', '${_hoursCtrl.text} hours'),
+                    _priceRow(tr('duration'), '${_hoursCtrl.text} hours'),
                     const Divider(height: 24),
                     _priceRow(
-                      'Total Amount',
+                      tr('total_amount'),
                       '₹${_totalAmount.toStringAsFixed(0)}',
                       bold: true,
                     ),
                     _priceRow(
-                      'Platform Fee (5%)',
+                      tr('platform_fee'),
                       '₹${_commission.toStringAsFixed(0)}',
                       color: _sub,
                     ),
@@ -415,7 +417,7 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                             ),
                           )
                         : Text(
-                            'Confirm Booking • ₹${_totalAmount.toStringAsFixed(0)}',
+                            '${tr('confirm_booking')} • ₹${_totalAmount.toStringAsFixed(0)}',
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,

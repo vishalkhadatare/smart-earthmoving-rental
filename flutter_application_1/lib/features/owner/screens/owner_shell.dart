@@ -1,6 +1,10 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -9,6 +13,8 @@ import '../../../core/services/notifications_service.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../notifications/notifications_screen.dart';
 import '../../booking/screens/provider_bookings_screen.dart';
+import '../../booking/services/booking_service.dart';
+import '../../../models/booking_model.dart';
 import '../../equipment/screens/add_equipment_screen.dart';
 
 import '../../equipment/screens/owner_equipment_detail_screen.dart';
@@ -33,15 +39,33 @@ class _OwnerShellState extends State<OwnerShell> {
   static const Color _accent = Color(0xFFFF6B00);
   static const Color _sub = Color(0xFFBBBBCC);
 
+<<<<<<< HEAD
   final List<Widget> _pages = const [
     _OwnerDashboard(),
     _OwnerEquipment(),
     _OwnerBookings(),
     _OwnerProfile(),
   ];
+=======
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      _OwnerDashboard(onSwitchTab: (i) => setState(() => _idx = i)),
+      const _OwnerEquipment(),
+      const _OwnerBookings(),
+      const _OwnerNotifications(),
+      _OwnerProfile(onSwitchTab: (i) => setState(() => _idx = i)),
+    ];
+  }
+>>>>>>> 30bced0 (Update project files)
 
   @override
   Widget build(BuildContext context) {
+    context
+        .locale; // register as EasyLocalization dependent so bottom nav rebuilds on language change
     return Scaffold(
       body: IndexedStack(index: _idx, children: _pages),
       bottomNavigationBar: Container(
@@ -50,7 +74,7 @@ class _OwnerShellState extends State<OwnerShell> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -62,10 +86,18 @@ class _OwnerShellState extends State<OwnerShell> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
+<<<<<<< HEAD
                 _nav(Icons.dashboard_rounded, 'Dashboard', 0),
                 _nav(Icons.construction_rounded, 'Equipment', 1),
                 _nav(Icons.event_note_rounded, 'Bookings', 2),
                 _nav(Icons.person_outline_rounded, 'Profile', 3),
+=======
+                _nav(Icons.dashboard_rounded, tr('dashboard'), 0),
+                _nav(Icons.construction_rounded, tr('equipment'), 1),
+                _nav(Icons.event_note_rounded, tr('bookings'), 2),
+                _nav(Icons.notifications_none_rounded, tr('notifications'), 3),
+                _nav(Icons.person_outline_rounded, tr('profile'), 4),
+>>>>>>> 30bced0 (Update project files)
               ],
             ),
           ),
@@ -111,7 +143,8 @@ class _OwnerShellState extends State<OwnerShell> {
 // ═══════════════════════════════════════════════════════════════
 
 class _OwnerDashboard extends StatefulWidget {
-  const _OwnerDashboard();
+  final void Function(int) onSwitchTab;
+  const _OwnerDashboard({required this.onSwitchTab});
   @override
   State<_OwnerDashboard> createState() => _OwnerDashboardState();
 }
@@ -128,17 +161,21 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StatsProvider>().loadUserStats();
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) {
-        context.read<equip_svc.EquipmentProvider>().loadProviderEquipment(uid);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
+  }
+
+  void _reload() {
+    if (!mounted) return;
+    context.read<StatsProvider>().loadUserStats();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      context.read<equip_svc.EquipmentProvider>().loadProviderEquipment(uid);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     final auth = Provider.of<AuthProvider>(context);
     final stats = context.watch<StatsProvider>().userStats;
     final equipProv = context.watch<equip_svc.EquipmentProvider>();
@@ -158,6 +195,31 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
               // Greeting
               Row(
                 children: [
+<<<<<<< HEAD
+=======
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr(
+                            'hello_greeting',
+                          ).replaceFirst('{}', auth.userName.split(' ').first),
+                          style: GoogleFonts.poppins(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: _dark,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tr('equipment_owner_dashboard'),
+                          style: GoogleFonts.poppins(fontSize: 13, color: _sub),
+                        ),
+                      ],
+                    ),
+                  ),
+>>>>>>> 30bced0 (Update project files)
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: _accent,
@@ -209,7 +271,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                         ),
                       );
                     },
-                    child: Icon(Icons.favorite_border_rounded,
+                    child: const Icon(Icons.favorite_border_rounded,
                         color: _sub, size: 24),
                   ),
                   const SizedBox(width: 12),
@@ -222,7 +284,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                     ),
                     child: Stack(
                       children: [
-                        Icon(Icons.notifications_none_rounded,
+                        const Icon(Icons.notifications_none_rounded,
                             color: _sub, size: 24),
                         if (notifProv.unseenCount > 0)
                           Positioned(
@@ -258,22 +320,24 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
               Row(
                 children: [
                   _statCard(
-                    '${stats.listings}',
-                    'Equipment',
+                    '${myEquip.length}',
+                    tr('equipment'),
                     Icons.construction_rounded,
                     _accent,
+                    onTap: () => widget.onSwitchTab(1),
                   ),
                   const SizedBox(width: 12),
                   _statCard(
                     '${stats.bookings}',
-                    'Bookings',
+                    tr('bookings'),
                     Icons.event_note_rounded,
                     _blue,
+                    onTap: () => widget.onSwitchTab(2),
                   ),
                   const SizedBox(width: 12),
                   _statCard(
                     '${stats.reviews}',
-                    'Reviews',
+                    tr('reviews'),
                     Icons.star_rounded,
                     _green,
                   ),
@@ -312,7 +376,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Total Earnings',
+                          tr('total_earnings'),
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -322,21 +386,47 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      '₹0.00',
-                      style: GoogleFonts.poppins(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Earnings tracking coming soon',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
+                    StreamBuilder<List<BookingModel>>(
+                      stream: FirebaseAuth.instance.currentUser?.uid != null
+                          ? BookingService().streamProviderBookings(
+                              FirebaseAuth.instance.currentUser!.uid,
+                            )
+                          : const Stream.empty(),
+                      builder: (context, snap) {
+                        double total = 0;
+                        int completedCount = 0;
+                        if (snap.hasData) {
+                          for (final b in snap.data!) {
+                            if (b.status == BookingStatus.completed) {
+                              total += b.providerAmount;
+                              completedCount++;
+                            }
+                          }
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '₹${total.toStringAsFixed(2)}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              completedCount == 0
+                                  ? tr('no_completed_bookings_yet')
+                                  : '$completedCount ${tr('completed_bookings')}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -345,7 +435,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
 
               // Quick actions
               Text(
-                'Quick Actions',
+                tr('quick_actions'),
                 style: GoogleFonts.poppins(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -353,6 +443,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                 ),
               ),
               const SizedBox(height: 12),
+<<<<<<< HEAD
               Center(
                 child: Column(
                   children: [
@@ -361,10 +452,21 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                       'Add\nEquipment',
                       _accent,
                       () => Navigator.push(
+=======
+              Row(
+                children: [
+                  _quickAction(
+                    Icons.add_circle_rounded,
+                    'Add\nEquipment',
+                    _accent,
+                    () async {
+                      await Navigator.push(
+>>>>>>> 30bced0 (Update project files)
                         context,
                         MaterialPageRoute(
                           builder: (_) => const AddEquipmentScreen(),
                         ),
+<<<<<<< HEAD
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -432,6 +534,21 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                             },
                           ),
                         ],
+=======
+                      );
+                      _reload();
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _quickAction(
+                    Icons.business_rounded,
+                    'Register\nProvider',
+                    _blue,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ProviderRegistrationScreen(),
+>>>>>>> 30bced0 (Update project files)
                       ),
                     ),
                   ],
@@ -443,7 +560,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
               Row(
                 children: [
                   Text(
-                    'Recent Equipment',
+                    tr('recent_equipment'),
                     style: GoogleFonts.poppins(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -467,12 +584,177 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                 )
               else if (myEquip.isEmpty)
                 _emptyCard(
-                  'No equipment yet',
-                  'Tap + to add your first piece of equipment',
+                  tr('no_equipment_yet'),
+                  tr('tap_to_add_equipment'),
                   Icons.construction_outlined,
                 )
               else
                 ...myEquip.take(3).map((e) => _equipRow(e)),
+              const SizedBox(height: 24),
+
+              // ── Recent Reviews ──
+              Row(
+                children: [
+                  Text(
+                    'Recent Reviews',
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: _dark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('reviews')
+                    .where(
+                      'providerId',
+                      isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+                    )
+                    .orderBy('createdAt', descending: true)
+                    .limit(10)
+                    .snapshots(),
+                builder: (context, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(color: _accent),
+                      ),
+                    );
+                  }
+                  final docs = snap.data?.docs ?? [];
+                  if (docs.isEmpty) {
+                    return _emptyCard(
+                      'No reviews yet',
+                      'Reviews from renters will appear here',
+                      Icons.star_outline_rounded,
+                    );
+                  }
+                  return Column(
+                    children: docs.map((doc) {
+                      final data = doc.data()! as Map<String, dynamic>;
+                      final rating = (data['rating'] as num?)?.toInt() ?? 0;
+                      final userName = (data['userName'] as String?) ?? 'User';
+                      final comment = (data['comment'] as String?) ?? '';
+                      final equipName =
+                          (data['equipmentName'] as String?) ?? 'Equipment';
+                      final ts = data['createdAt'];
+                      String dateStr = '';
+                      if (ts is Timestamp) {
+                        final dt = ts.toDate();
+                        dateStr = '${dt.day}/${dt.month}/${dt.year}';
+                      }
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: _card,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: _accent.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  child: Text(
+                                    userName.isNotEmpty
+                                        ? userName[0].toUpperCase()
+                                        : '?',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: _accent,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: _dark,
+                                        ),
+                                      ),
+                                      Text(
+                                        equipName,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: _sub,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: List.generate(
+                                        5,
+                                        (i) => Icon(
+                                          i < rating
+                                              ? Icons.star_rounded
+                                              : Icons.star_outline_rounded,
+                                          color: Colors.amber,
+                                          size: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    if (dateStr.isNotEmpty)
+                                      Text(
+                                        dateStr,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          color: _sub,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            if (comment.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                comment,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: _sub,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  );
+                },
+              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -481,35 +763,47 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
     );
   }
 
-  Widget _statCard(String val, String label, IconData icon, Color color) {
+  Widget _statCard(
+    String val,
+    String label,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _card,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              val,
-              style: GoogleFonts.poppins(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: _dark,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _card,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
-            ),
-            Text(label, style: GoogleFonts.poppins(fontSize: 11, color: _sub)),
-          ],
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 8),
+              Text(
+                val,
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: _dark,
+                ),
+              ),
+              Text(
+                label,
+                style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -672,7 +966,7 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                e.isAvailable ? 'Active' : 'Inactive',
+                e.isAvailable ? tr('active') : tr('inactive'),
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -720,10 +1014,12 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
     if (uid != null) {
       context.read<equip_svc.EquipmentProvider>().loadProviderEquipment(uid);
     }
+    context.read<StatsProvider>().loadUserStats();
   }
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     final prov = context.watch<equip_svc.EquipmentProvider>();
     final items = prov.equipment
         .map((f) => EquipmentModel.fromFirestoreModel(f))
@@ -739,7 +1035,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
               child: Row(
                 children: [
                   Text(
-                    'My Equipment',
+                    tr('my_equipment'),
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -789,7 +1085,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
         backgroundColor: _accent,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(
-          'Post Equipment',
+          tr('post_equipment'),
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -820,7 +1116,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Listings Yet',
+            tr('no_listings_yet'),
             style: GoogleFonts.poppins(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -829,7 +1125,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Post your earthmoving equipment\nfor rent and manage your listings here',
+            tr('post_equipment_msg'),
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(fontSize: 14, color: _sub, height: 1.5),
           ),
@@ -931,7 +1227,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          e.isAvailable ? 'Active' : 'Inactive',
+                          e.isAvailable ? tr('active') : tr('inactive'),
                           style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -972,20 +1268,39 @@ class _OwnerBookings extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 4. SERVICES (post & manage services)
+// 4. NOTIFICATIONS (incoming booking requests)
 // ═══════════════════════════════════════════════════════════════
 
-class _OwnerServices extends StatelessWidget {
-  const _OwnerServices();
+class _OwnerNotifications extends StatelessWidget {
+  const _OwnerNotifications();
 
   static const _accent = Color(0xFFFF6B00);
   static const _dark = Color(0xFF1A1A2E);
   static const _sub = Color(0xFF8F90A6);
+  static const _bg = Color(0xFFF7F7F7);
+  static const _card = Colors.white;
+
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    context.locale;
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
+      backgroundColor: _bg,
       body: SafeArea(
         child: Column(
           children: [
@@ -994,7 +1309,7 @@ class _OwnerServices extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'My Services',
+                    tr('notifications'),
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -1005,80 +1320,225 @@ class _OwnerServices extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(40),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF3E8),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.build_circle_outlined,
-                          size: 40,
-                          color: _accent,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'No Services Yet',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: _dark,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Post maintenance, repair or\noperator services for hirers',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: _sub,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: StreamBuilder<List<BookingModel>>(
+                stream: BookingService().streamProviderBookings(uid),
+                builder: (ctx, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: _accent),
+                    );
+                  }
+                  final bookings = snap.data ?? [];
+                  if (bookings.isEmpty) return _empty();
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    itemCount: bookings.length,
+                    itemBuilder: (ctx, i) => _notifCard(bookings[i]),
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_post_service',
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Service posting coming soon!',
-                style: GoogleFonts.poppins(),
+    );
+  }
+
+  Widget _empty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF3E8),
+                borderRadius: BorderRadius.circular(20),
               ),
-              backgroundColor: _accent,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              child: const Icon(
+                Icons.notifications_none_rounded,
+                size: 40,
+                color: _accent,
               ),
             ),
-          );
-        },
-        backgroundColor: _accent,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: Text(
-          'Post Service',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+            const SizedBox(height: 24),
+            Text(
+              tr('no_notifications'),
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: _dark,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              tr('notifications_empty_msg'),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: _sub,
+                height: 1.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _notifCard(BookingModel b) {
+    final color = _statusColor(b.status);
+    final icon = _statusIcon(b.status);
+    final label = _statusLabel(b.status);
+    final d = b.bookingDate;
+    final dateStr = '${d.day} ${_months[d.month - 1]} ${d.year}';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  b.equipmentName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _dark,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'From: ${b.userName}',
+                  style: GoogleFonts.poppins(fontSize: 12, color: _sub),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        label,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateStr,
+                      style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '₹${b.totalAmount.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _statusColor(BookingStatus s) {
+    switch (s) {
+      case BookingStatus.pending:
+        return const Color(0xFFFF9800);
+      case BookingStatus.approved:
+        return const Color(0xFF00C853);
+      case BookingStatus.inProgress:
+        return const Color(0xFF3B82F6);
+      case BookingStatus.completed:
+        return const Color(0xFF9C27B0);
+      case BookingStatus.cancelled:
+        return Colors.grey;
+      case BookingStatus.rejected:
+        return Colors.red;
+    }
+  }
+
+  IconData _statusIcon(BookingStatus s) {
+    switch (s) {
+      case BookingStatus.pending:
+        return Icons.hourglass_top_rounded;
+      case BookingStatus.approved:
+        return Icons.check_circle_rounded;
+      case BookingStatus.inProgress:
+        return Icons.play_circle_rounded;
+      case BookingStatus.completed:
+        return Icons.done_all_rounded;
+      case BookingStatus.cancelled:
+        return Icons.cancel_rounded;
+      case BookingStatus.rejected:
+        return Icons.block_rounded;
+    }
+  }
+
+  String _statusLabel(BookingStatus s) {
+    switch (s) {
+      case BookingStatus.pending:
+        return 'Pending';
+      case BookingStatus.approved:
+        return 'Approved';
+      case BookingStatus.inProgress:
+        return 'In Progress';
+      case BookingStatus.completed:
+        return 'Completed';
+      case BookingStatus.cancelled:
+        return 'Cancelled';
+      case BookingStatus.rejected:
+        return 'Rejected';
+    }
   }
 }
 
@@ -1087,7 +1547,8 @@ class _OwnerServices extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════
 
 class _OwnerProfile extends StatefulWidget {
-  const _OwnerProfile();
+  final void Function(int) onSwitchTab;
+  const _OwnerProfile({required this.onSwitchTab});
   @override
   State<_OwnerProfile> createState() => _OwnerProfileState();
 }
@@ -1100,16 +1561,83 @@ class _OwnerProfileState extends State<_OwnerProfile> {
   static const Color _sub = Color(0xFF8F90A6);
   static const Color _card = Colors.white;
 
+  static const Map<String, String> _langNames = {
+    'en': 'English',
+    'hi': 'हिन्दी',
+    'mr': 'मराठी',
+  };
+
+  void _showLanguagePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (_, setSheetState) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  tr('select_language'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              ...context.supportedLocales.map((locale) {
+                final code = locale.languageCode;
+                final isSelected = context.locale == locale;
+                return ListTile(
+                  leading: Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: isSelected ? _accent : _sub,
+                  ),
+                  title: Text(
+                    _langNames[code] ?? code,
+                    style: GoogleFonts.poppins(
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected ? _accent : Colors.black87,
+                    ),
+                  ),
+                  trailing: Text(
+                    code.toUpperCase(),
+                    style: GoogleFonts.poppins(fontSize: 12, color: _sub),
+                  ),
+                  onTap: () {
+                    context.setLocale(locale);
+                    Navigator.of(sheetCtx).pop();
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StatsProvider>().loadUserStats();
+      context.read<AuthProvider>().loadUserProfile();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     final auth = Provider.of<AuthProvider>(context);
     final stats = context.watch<StatsProvider>().userStats;
     final name = auth.userName;
@@ -1195,7 +1723,7 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Owner',
+                        tr('owner_badge'),
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1206,19 +1734,19 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        _stat('${stats.listings}', 'Listings'),
+                        _stat('${stats.listings}', tr('listings')),
                         Container(
                           width: 1,
                           height: 30,
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
-                        _stat('${stats.bookings}', 'Bookings'),
+                        _stat('${stats.bookings}', tr('bookings')),
                         Container(
                           width: 1,
                           height: 30,
                           color: Colors.white.withValues(alpha: 0.3),
                         ),
-                        _stat('${stats.reviews}', 'Reviews'),
+                        _stat('${stats.reviews}', tr('reviews')),
                       ],
                     ),
                   ],
@@ -1226,31 +1754,39 @@ class _OwnerProfileState extends State<_OwnerProfile> {
               ),
               const SizedBox(height: 20),
 
-              _section('Account', [
+              // Email verification banner
+              if (!auth.isEmailVerified) _emailVerificationBanner(auth),
+
+              _section(tr('account'), [
                 _M(
                   Icons.person_outline_rounded,
-                  'Edit Profile',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Profile editing coming soon!',
-                          style: GoogleFonts.poppins(),
-                        ),
-                        backgroundColor: _accent,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    );
-                  },
+                  tr('edit_profile'),
+                  onTap: () => _showEditProfileSheet(auth),
                 ),
+<<<<<<< HEAD
+=======
+                _M(
+                  Icons.business_rounded,
+                  tr('register_as_provider'),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProviderRegistrationScreen(),
+                    ),
+                  ),
+                ),
+>>>>>>> 30bced0 (Update project files)
               ]),
               const SizedBox(height: 14),
-              _section('General', [
+              _section(tr('general'), [
+                _M(
+                  Icons.language_rounded,
+                  tr('language_label'),
+                  onTap: _showLanguagePicker,
+                ),
                 _M(
                   Icons.notifications_none_rounded,
+<<<<<<< HEAD
                   'Notifications',
                   onTap: () {
                     Navigator.push(
@@ -1260,15 +1796,19 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                       ),
                     );
                   },
+=======
+                  tr('notifications'),
+                  onTap: () => widget.onSwitchTab(3),
+>>>>>>> 30bced0 (Update project files)
                 ),
                 _M(
                   Icons.payment_outlined,
-                  'Payment Methods',
+                  tr('payment_methods'),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Cash on delivery is the default payment method',
+                          tr('cash_on_delivery_msg'),
                           style: GoogleFonts.poppins(),
                         ),
                         backgroundColor: _accent,
@@ -1282,7 +1822,7 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                 ),
                 _M(
                   Icons.history_rounded,
-                  'Transaction History',
+                  tr('transaction_history'),
                   onTap: () {
                     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
                     Navigator.push(
@@ -1295,15 +1835,15 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                 ),
               ]),
               const SizedBox(height: 14),
-              _section('Support', [
+              _section(tr('support'), [
                 _M(
                   Icons.help_outline_rounded,
-                  'Help & FAQ',
+                  tr('help_faq'),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'For support, email us at support@equippro.in',
+                          tr('support_email_msg'),
                           style: GoogleFonts.poppins(),
                         ),
                         backgroundColor: _accent,
@@ -1317,18 +1857,18 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                 ),
                 _M(
                   Icons.chat_outlined,
-                  'Contact Us',
+                  tr('contact_us'),
                   onTap: () =>
                       launchUrl(Uri.parse('mailto:support@equippro.in')),
                 ),
                 _M(
                   Icons.star_outline_rounded,
-                  'Rate App',
+                  tr('rate_app'),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Thank you for using EquipPro!',
+                          tr('thank_you_msg'),
                           style: GoogleFonts.poppins(),
                         ),
                         backgroundColor: _accent,
@@ -1354,7 +1894,7 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                     size: 20,
                   ),
                   label: Text(
-                    'Sign Out',
+                    tr('sign_out'),
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -1371,7 +1911,7 @@ class _OwnerProfileState extends State<_OwnerProfile> {
               ),
               const SizedBox(height: 20),
               Text(
-                'SEEMP v1.0.0',
+                tr('app_version'),
                 style: GoogleFonts.poppins(fontSize: 12, color: _sub),
               ),
               const SizedBox(height: 20),
@@ -1392,6 +1932,282 @@ class _OwnerProfileState extends State<_OwnerProfile> {
       ),
     ),
   );
+
+  void _showEditProfileSheet(AuthProvider auth) {
+    final nameCtrl = TextEditingController(text: auth.userName);
+    final phoneCtrl = TextEditingController(text: auth.userPhone ?? '');
+    File? pickedFile;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  tr('edit_profile'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1A1A2E),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Avatar picker
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await ImagePicker().pickImage(
+                      source: ImageSource.gallery,
+                      maxWidth: 600,
+                      imageQuality: 75,
+                    );
+                    if (picked != null) {
+                      setSheetState(() => pickedFile = File(picked.path));
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 46,
+                        backgroundColor: _accentLight,
+                        backgroundImage: pickedFile != null
+                            ? FileImage(pickedFile!) as ImageProvider
+                            : (auth.userPhotoUrl != null
+                                  ? NetworkImage(auth.userPhotoUrl!)
+                                  : null),
+                        child: pickedFile == null && auth.userPhotoUrl == null
+                            ? Text(
+                                auth.userName.isNotEmpty
+                                    ? auth.userName[0].toUpperCase()
+                                    : 'O',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w700,
+                                  color: _accent,
+                                ),
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: _accent,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: nameCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(
+                    labelText: tr('name'),
+                    prefixIcon: const Icon(Icons.person_outline_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF7F7F7),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: tr('phone'),
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF7F7F7),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _accent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: isSaving
+                        ? null
+                        : () async {
+                            setSheetState(() => isSaving = true);
+                            final ok = await auth.updateUserProfile(
+                              name: nameCtrl.text.trim().isEmpty
+                                  ? null
+                                  : nameCtrl.text.trim(),
+                              phone: phoneCtrl.text.trim(),
+                              photoFile: pickedFile,
+                            );
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  ok
+                                      ? tr('profile_updated')
+                                      : (auth.errorMessage ?? 'Update failed'),
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: ok
+                                    ? const Color(0xFF00C853)
+                                    : Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                          },
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Text(
+                            tr('save'),
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _emailVerificationBanner(AuthProvider auth) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3CD),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFFFCC00).withValues(alpha: 0.5),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: Color(0xFFFF9800),
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('email_not_verified'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF7A5C00),
+                  ),
+                ),
+                Text(
+                  tr('verify_email_to_continue'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF7A5C00),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              await auth.sendEmailVerification();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      tr('verification_email_sent'),
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: _accent,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _accent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                tr('verify'),
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _stat(String val, String label) => Expanded(
     child: Column(

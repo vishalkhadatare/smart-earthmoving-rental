@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -68,6 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     // Watch provider so UI rebuilds when Firestore data loads
     context.watch<equip_svc.EquipmentProvider>();
     final equipment = _filteredEquipment;
@@ -86,7 +88,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Results',
+                    tr('results'),
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -162,7 +164,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: Center(
               child: Text(
-                'Browse Equipment',
+                tr('browse_equipment'),
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -218,9 +220,15 @@ class _SearchScreenState extends State<SearchScreen> {
           style: GoogleFonts.poppins(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
           cursorColor: _accent,
           decoration: InputDecoration(
+<<<<<<< HEAD
             hintText: 'Search equipment, model, provider...',
             hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
             prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70, size: 22),
+=======
+            hintText: tr('search_equipment_placeholder'),
+            hintStyle: GoogleFonts.poppins(fontSize: 14, color: _sub),
+            prefixIcon: const Icon(Icons.search_rounded, color: _sub, size: 22),
+>>>>>>> 30bced0 (Update project files)
             suffixIcon: _searchQuery.isNotEmpty
                 ? GestureDetector(
                     onTap: () {
@@ -472,7 +480,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No equipment found',
+            tr('no_equipment_found'),
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -481,7 +489,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Try a different search or category',
+            tr('try_different_search'),
             style: GoogleFonts.poppins(fontSize: 13, color: _sub),
           ),
         ],

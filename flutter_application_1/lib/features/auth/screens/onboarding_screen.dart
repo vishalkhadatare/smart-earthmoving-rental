@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -34,26 +35,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  static const _pages = <_OnboardingData>[
+  List<_OnboardingData> get _pages => <_OnboardingData>[
     _OnboardingData(
-      title: 'Find Equipment ',
-      highlight: 'Instantly',
-      description:
-          'Browse thousands of construction machines near you.\nFilter by type, location, and price.',
+      title: tr('find_equipment'),
+      highlight: tr('instantly'),
+      description: tr('onboarding_desc_1'),
       svgPath: 'assets/images/onboard_find.svg',
     ),
     _OnboardingData(
-      title: 'Compare & ',
-      highlight: 'Save Money',
-      description:
-          'Compare rates from multiple owners.\nTransparent pricing, no hidden charges.',
+      title: tr('compare_and'),
+      highlight: tr('save_money'),
+      description: tr('onboarding_desc_2'),
       svgPath: 'assets/images/onboard_compare.svg',
     ),
     _OnboardingData(
-      title: 'Book & Rent ',
-      highlight: 'Hassle-Free',
-      description:
-          'One-tap booking with instant confirmation.\nTrack and manage everything in one place.',
+      title: tr('book_and_rent'),
+      highlight: tr('hassle_free'),
+      description: tr('onboarding_desc_3'),
       svgPath: 'assets/images/onboard_book.svg',
     ),
   ];
@@ -79,6 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -117,9 +116,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'EquipPro',
-                          style: TextStyle(
+                        Text(
+                          tr('equippro'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: _accent,
@@ -130,9 +129,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Spacer(),
                     TextButton(
                       onPressed: _skip,
-                      child: const Text(
-                        'Skip',
-                        style: TextStyle(
+                      child: Text(
+                        tr('skip'),
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: _textSub,
@@ -193,8 +192,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         child: Text(
                           _currentPage == _pages.length - 1
-                              ? 'Get Started'
-                              : 'Continue',
+                              ? tr('get_started')
+                              : tr('continue_btn'),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,

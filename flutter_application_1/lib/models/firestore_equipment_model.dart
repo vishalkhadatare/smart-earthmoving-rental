@@ -88,6 +88,14 @@ class FirestoreEquipmentModel {
   final int reviewCount;
   final int totalBookings;
   final String ownerPhone;
+  // Specification parameters
+  final String company;
+  final String soilType;
+  final String depth;
+  final String enginePower;
+  final String bucketCapacity;
+  final String area;
+  final String operatingWeight;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -112,6 +120,13 @@ class FirestoreEquipmentModel {
     this.reviewCount = 0,
     this.totalBookings = 0,
     this.ownerPhone = '',
+    this.company = '',
+    this.soilType = '',
+    this.depth = '',
+    this.enginePower = '',
+    this.bucketCapacity = '',
+    this.area = '',
+    this.operatingWeight = '',
     DateTime? createdAt,
     DateTime? updatedAt,
   }) : createdAt = createdAt ?? DateTime.now(),
@@ -139,6 +154,13 @@ class FirestoreEquipmentModel {
       'reviewCount': reviewCount,
       'totalBookings': totalBookings,
       'ownerPhone': ownerPhone,
+      'company': company,
+      'soilType': soilType,
+      'depth': depth,
+      'enginePower': enginePower,
+      'bucketCapacity': bucketCapacity,
+      'area': area,
+      'operatingWeight': operatingWeight,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -166,6 +188,13 @@ class FirestoreEquipmentModel {
       reviewCount: map['reviewCount'] ?? 0,
       totalBookings: map['totalBookings'] ?? 0,
       ownerPhone: map['ownerPhone'] ?? '',
+      company: map['company'] ?? '',
+      soilType: map['soilType'] ?? '',
+      depth: map['depth'] ?? '',
+      enginePower: map['enginePower'] ?? '',
+      bucketCapacity: map['bucketCapacity'] ?? '',
+      area: map['area'] ?? '',
+      operatingWeight: map['operatingWeight'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -197,6 +226,13 @@ class FirestoreEquipmentModel {
     int? reviewCount,
     int? totalBookings,
     String? ownerPhone,
+    String? company,
+    String? soilType,
+    String? depth,
+    String? enginePower,
+    String? bucketCapacity,
+    String? area,
+    String? operatingWeight,
   }) {
     return FirestoreEquipmentModel(
       id: id,
@@ -219,6 +255,13 @@ class FirestoreEquipmentModel {
       reviewCount: reviewCount ?? this.reviewCount,
       totalBookings: totalBookings ?? this.totalBookings,
       ownerPhone: ownerPhone ?? this.ownerPhone,
+      company: company ?? this.company,
+      soilType: soilType ?? this.soilType,
+      depth: depth ?? this.depth,
+      enginePower: enginePower ?? this.enginePower,
+      bucketCapacity: bucketCapacity ?? this.bucketCapacity,
+      area: area ?? this.area,
+      operatingWeight: operatingWeight ?? this.operatingWeight,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );

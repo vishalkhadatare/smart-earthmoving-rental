@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
 import '../models/account_type.dart';
@@ -32,6 +35,8 @@ class AuthProvider extends ChangeNotifier {
 
   GoogleSignInAccount? _cachedGoogleUser;
 
+  String? _cachedPhone;
+
   AuthState get state => _state;
   bool get isLoading => _isLoading;
   bool get isGoogleLoading => _isGoogleLoading;
@@ -55,7 +60,79 @@ class AuthProvider extends ChangeNotifier {
 
   String? get userPhotoUrl => __firebaseAuth?.currentUser?.photoURL;
 
+  String? get userPhone => _cachedPhone;
+
+  Future<void> loadUserProfile() async {
+    await _ensureFirebaseInitialized();
+    final uid = _firebaseAuth.currentUser?.uid;
+    if (uid == null) return;
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      _cachedPhone = doc.data()?['phone'] as String?;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<bool> updateUserProfile({
+    String? name,
+    String? phone,
+    File? photoFile,
+  }) async {
+    await _ensureFirebaseInitialized();
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return false;
+    try {
+      String? newPhotoUrl;
+      if (photoFile != null) {
+        final ref = FirebaseStorage.instance.ref(
+          'profile_pictures/${user.uid}.jpg',
+        );
+        await ref.putFile(photoFile);
+        newPhotoUrl = await ref.getDownloadURL();
+        await user.updatePhotoURL(newPhotoUrl);
+      }
+      if (name != null && name.trim().isNotEmpty) {
+        await user.updateDisplayName(name.trim());
+      }
+      final updateData = <String, dynamic>{};
+      if (name != null && name.trim().isNotEmpty) {
+        updateData['name'] = name.trim();
+      }
+      if (phone != null) updateData['phone'] = phone.trim();
+      if (newPhotoUrl != null) updateData['photoUrl'] = newPhotoUrl;
+      if (updateData.isNotEmpty) {
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .set(updateData, SetOptions(merge: true));
+      }
+      if (phone != null) _cachedPhone = phone.trim();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Profile update failed: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
+  }
+
   bool get isAuthenticated => _state == AuthState.authenticated;
+
+  bool get isEmailVerified =>
+      __firebaseAuth?.currentUser?.emailVerified ?? false;
+
+  Future<void> sendEmailVerification() async {
+    await _ensureFirebaseInitialized();
+    final user = _firebaseAuth.currentUser;
+    if (user == null || user.emailVerified) return;
+    await user.sendEmailVerification();
+  }
+
+  Future<void> refreshEmailVerificationStatus() async {
+    await _ensureFirebaseInitialized();
+    await _firebaseAuth.currentUser?.reload();
+    notifyListeners();
+  }
 
   bool consumePreferOtpLoginMode() {
     final shouldPreferOtpMode = _preferOtpLoginMode;
@@ -87,12 +164,7 @@ class AuthProvider extends ChangeNotifier {
       // If already signed in, skip onboarding and go straight to app
       if (_firebaseAuth.currentUser != null) {
         _currentUser = _firebaseAuth.currentUser?.email;
-        await _loadCurrentAccountType(_firebaseAuth.currentUser!.uid).timeout(
-          const Duration(seconds: 2),
-          onTimeout: () {
-            _currentAccountType = AccountType.user;
-          },
-        );
+        await _loadCurrentAccountType(_firebaseAuth.currentUser!.uid);
         _currentAccountType ??= AccountType.user;
         _state = AuthState.authenticated;
         _isLoading = false;
@@ -158,7 +230,7 @@ class AuthProvider extends ChangeNotifier {
         // Send email verification with deep link settings so user can return to app
         try {
           await createdUser.sendEmailVerification(ActionCodeSettings(
-            url: '${dynamicLinkDomain}/verify?uid=${createdUser.uid}',
+            url: '$dynamicLinkDomain/verify?uid=${createdUser.uid}',
             handleCodeInApp: true,
           ));
         } catch (_) {}
@@ -309,13 +381,8 @@ class AuthProvider extends ChangeNotifier {
 
       _cachedGoogleUser = googleUser;
 
-      // Obtain auth details with timeout
-      final googleAuth = await googleUser.authentication.timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Google authentication took too long');
-        },
-      );
+      // Obtain auth details (no artificial timeout — let the platform handle it)
+      final googleAuth = await googleUser.authentication;
 
       // Create Firebase credential
       final credential = GoogleAuthProvider.credential(
@@ -323,15 +390,10 @@ class AuthProvider extends ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      // Sign in with Firebase with timeout
-      final userCredential = await _firebaseAuth
-          .signInWithCredential(credential)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception('Firebase sign in took too long');
-            },
-          );
+      // Sign in with Firebase
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
 
       await _loadCurrentAccountType(userCredential.user?.uid);
 
@@ -341,9 +403,18 @@ class AuthProvider extends ChangeNotifier {
       _isGoogleLoading = false;
       notifyListeners();
       return true;
+    } on TimeoutException {
+      // Should no longer happen, but handle gracefully just in case
+      _cachedGoogleUser = null;
+      _errorMessage =
+          'Connection timed out. Please check your internet and try again.';
+      _isLoading = false;
+      _isGoogleLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _cachedGoogleUser = null;
-      _errorMessage = 'Google sign in failed: ${e.toString()}';
+      _errorMessage = 'Google sign in failed. Please try again.';
       _isLoading = false;
       _isGoogleLoading = false;
       notifyListeners();
@@ -356,117 +427,27 @@ class AuthProvider extends ChangeNotifier {
     return signInWithGoogle(); // Same flow as sign in for Google
   }
 
-  /// Sign in with Phone OTP - Send OTP to phone number
+  /// Phone login is not available.
   Future<bool> signInWithPhone({required String phoneNumber}) async {
-    await _ensureFirebaseInitialized();
-
-    _isLoading = true;
-    _errorMessage = null;
-    _isOtpSent = false;
+    _errorMessage = 'Phone login is not available.';
     notifyListeners();
-
-    try {
-      // Validate phone number format
-      if (!phoneNumber.startsWith('+')) {
-        _errorMessage =
-            'Please enter phone number with country code (e.g., +1234567890)';
-        _isLoading = false;
-        notifyListeners();
-        return false;
-      }
-
-      await _firebaseAuth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        timeout: const Duration(seconds: 60),
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-sign in if credential is automatically verified
-          await _firebaseAuth.signInWithCredential(credential);
-          _currentUser = phoneNumber;
-          _state = AuthState.authenticated;
-          _isOtpSent = false;
-          _isLoading = false;
-          notifyListeners();
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          _errorMessage = _getPhoneAuthErrorMessage(e.code);
-          _isOtpSent = false;
-          _isLoading = false;
-          notifyListeners();
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          _verificationId = verificationId;
-          _isOtpSent = true;
-          _errorMessage = null;
-          _isLoading = false;
-          notifyListeners();
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
-          _isLoading = false;
-          notifyListeners();
-        },
-      );
-      return true;
-    } catch (e) {
-      _errorMessage = 'Phone verification failed: ${e.toString()}';
-      _isOtpSent = false;
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    return false;
   }
 
-  /// Verify OTP code
+  /// Phone OTP verification is not available.
   Future<bool> verifyOTP({required String otp}) async {
-    await _ensureFirebaseInitialized();
-
-    if (_verificationId == null) {
-      _errorMessage = 'Verification session expired. Please try again.';
-      return false;
-    }
-
-    _isLoading = true;
-    _errorMessage = null;
+    _errorMessage = 'Phone verification is not available.';
     notifyListeners();
-
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: otp,
-      );
-
-      final userCredential = await _firebaseAuth.signInWithCredential(
-        credential,
-      );
-
-      _currentUser = userCredential.user?.phoneNumber;
-      _state = AuthState.authenticated;
-      _isOtpSent = false;
-      _verificationId = null;
-      _isLoading = false;
-      notifyListeners();
-      return true;
-    } on FirebaseAuthException catch (e) {
-      _errorMessage = _getPhoneAuthErrorMessage(e.code);
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      _errorMessage = 'OTP verification failed: ${e.toString()}';
-      _isLoading = false;
-      notifyListeners();
-      return false;
-    }
+    return false;
   }
 
-  /// Resend OTP
+  /// Resend OTP (sends a fresh token via Appwrite).
   Future<bool> resendOTP({required String phoneNumber}) async {
     return signInWithPhone(phoneNumber: phoneNumber);
   }
 
-  /// Reset phone auth state
+  /// Reset phone auth state.
   void resetPhoneAuth() {
-    _verificationId = null;
     _isOtpSent = false;
     _errorMessage = null;
     notifyListeners();
@@ -480,16 +461,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Sign out from both Firebase and Google in parallel
-      await Future.wait([
-        _firebaseAuth.signOut(),
-        _googleSignIn.signOut(),
-      ]).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Sign out took too long');
-        },
-      );
+      await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
 
       _currentUser = null;
       _currentAccountType = null;
@@ -509,11 +481,7 @@ class AuthProvider extends ChangeNotifier {
       return;
     }
 
-    final userDoc = await _firestore
-        .collection('users')
-        .doc(uid)
-        .get()
-        .timeout(const Duration(seconds: 2));
+    final userDoc = await _firestore.collection('users').doc(uid).get();
     final accountTypeValue = userDoc.data()?['accountType'] as String?;
 
     switch (accountTypeValue) {
@@ -525,28 +493,6 @@ class AuthProvider extends ChangeNotifier {
         break;
       default:
         _currentAccountType = null;
-    }
-  }
-
-  /// Convert Firebase phone auth error codes to user-friendly messages
-  String _getPhoneAuthErrorMessage(String code) {
-    switch (code) {
-      case 'invalid-phone-number':
-        return 'Invalid phone number format.';
-      case 'missing-phone-number':
-        return 'Phone number is required.';
-      case 'quota-exceeded':
-        return 'Too many requests. Please try again later.';
-      case 'user-disabled':
-        return 'This user account has been disabled.';
-      case 'operation-not-allowed':
-        return 'Phone sign-in is not enabled.';
-      case 'invalid-verification-code':
-        return 'The verification code is invalid.';
-      case 'session-expired':
-        return 'Verification session expired. Please request a new code.';
-      default:
-        return 'Phone verification failed: $code';
     }
   }
 

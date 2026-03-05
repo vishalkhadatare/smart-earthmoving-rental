@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -47,6 +48,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
@@ -64,7 +66,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
                 onPressed: () => Navigator.pop(context),
               ),
         title: Text(
-          'Booking Requests',
+          tr('booking_requests'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -81,11 +83,11 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Active'),
-            Tab(text: 'Done'),
-            Tab(text: 'All'),
+          tabs: [
+            Tab(text: tr('pending')),
+            Tab(text: tr('active')),
+            Tab(text: tr('done')),
+            Tab(text: tr('all')),
           ],
         ),
       ),
@@ -145,7 +147,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'No bookings yet',
+              tr('no_bookings_yet'),
               style: GoogleFonts.poppins(fontSize: 16, color: _sub),
             ),
           ],
@@ -190,7 +192,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
               Expanded(
                 child: Text(
                   booking.equipmentName.isEmpty
-                      ? 'Equipment Booking'
+                      ? tr('equipment_booking')
                       : booking.equipmentName,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
@@ -241,7 +243,10 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
                 ),
               ),
               Text(
-                'You earn: ₹${booking.providerAmount.toStringAsFixed(0)}',
+                tr('you_earn').replaceFirst(
+                  '{}',
+                  '₹${booking.providerAmount.toStringAsFixed(0)}',
+                ),
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -269,7 +274,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
                       ),
                     ),
                     child: Text(
-                      'Reject',
+                      tr('reject'),
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -288,7 +293,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
                       ),
                     ),
                     child: Text(
-                      'Accept',
+                      tr('accept'),
                       style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -312,7 +317,7 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
                   ),
                 ),
                 child: Text(
-                  'Mark Completed',
+                  tr('mark_completed'),
                   style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -356,13 +361,13 @@ class _ProviderBookingsScreenState extends State<ProviderBookingsScreen>
         content: Text(
           ok
               ? (status == BookingStatus.completed
-                    ? 'Booking marked as completed!'
+                    ? tr('booking_completed_msg')
                     : status == BookingStatus.approved
-                    ? 'Booking accepted!'
+                    ? tr('booking_accepted')
                     : status == BookingStatus.rejected
-                    ? 'Booking rejected'
-                    : 'Status updated!')
-              : bp.errorMessage ?? 'Update failed',
+                    ? tr('booking_rejected')
+                    : tr('status_updated'))
+              : bp.errorMessage ?? tr('update_failed'),
         ),
         backgroundColor: ok ? Colors.green : Colors.redAccent,
         behavior: SnackBarBehavior.floating,

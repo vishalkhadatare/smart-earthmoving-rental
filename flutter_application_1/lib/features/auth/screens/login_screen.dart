@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/country_model.dart';
 import '../providers/auth_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,7 +32,6 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Palette ──
   static const _bg = Colors.white;
   static const _surface = Color(0xFFF7F7F7);
-  static const _card = Color(0xFFFFFFFF);
   static const _accent = Color(0xFFFF6B00);
   static const _accent2 = Color(0xFFFFA040);
   static const _textPrimary = Color(0xFF1A1A1A);
@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Auth actions (unchanged logic) ──
   Future<void> _sendOTP() async {
     if (_phoneCtrl.text.isEmpty) {
-      _toast('Enter your phone number');
+      _toast(tr('enter_phone_number'));
       return;
     }
     final full = _country.dialCode + _phoneCtrl.text.trim();
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _verifyOTP() async {
     if (_otpCtrl.text.isEmpty) {
-      _toast('Enter the OTP');
+      _toast(tr('enter_otp'));
       return;
     }
     final ok = await context.read<AuthProvider>().verifyOTP(
@@ -132,13 +132,16 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _forgot() async {
     final em = _emailCtrl.text.trim();
     if (em.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(em)) {
-      _toast('Enter a valid email first');
+      _toast(tr('enter_valid_email_first'));
       return;
     }
     final ok = await context.read<AuthProvider>().resetPassword(email: em);
     if (!mounted) return;
     if (ok) {
-      _snack('Reset link sent to $em', const Color(0xFF10B981));
+      _snack(
+        tr('reset_link_sent').replaceFirst('{}', em),
+        const Color(0xFF10B981),
+      );
     } else {
       _toast(context.read<AuthProvider>().errorMessage);
     }
@@ -154,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          m ?? 'Something went wrong',
+          m ?? tr('something_went_wrong'),
           style: GoogleFonts.poppins(fontSize: 13),
         ),
         backgroundColor: Colors.redAccent,
@@ -177,6 +180,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -295,9 +299,9 @@ class _LoginScreenState extends State<LoginScreen>
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: _accent.withOpacity(0.15)),
                 ),
-                child: const Text(
-                  '👋 Welcome back',
-                  style: TextStyle(
+                child: Text(
+                  tr('welcome_back_emoji'),
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: _accent,
@@ -306,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen>
               ),
               const SizedBox(height: 14),
               Text(
-                'Sign In to\nYour Account',
+                tr('sign_in_to_account'),
                 style: GoogleFonts.poppins(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -316,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Continue managing your equipment & bookings',
+                tr('continue_managing'),
                 style: GoogleFonts.poppins(fontSize: 14, color: _textSub),
               ),
             ],
@@ -365,7 +369,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(width: 7),
         Text(
-          'EquipPro',
+          tr('equippro'),
           style: GoogleFonts.poppins(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -401,9 +405,9 @@ class _LoginScreenState extends State<LoginScreen>
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
-      tabs: const [
-        Tab(text: '📱  Phone OTP'),
-        Tab(text: '✉️  Email'),
+      tabs: [
+        Tab(text: tr('phone_otp')),
+        Tab(text: tr('email_tab')),
       ],
     ),
   );
@@ -414,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (!auth.isOtpSent) ...[
-          _label('Mobile Number'),
+          _label(tr('mobile_number')),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -459,12 +463,12 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'We\'ll send a 6-digit verification code',
+            tr('send_verification_code'),
             style: GoogleFonts.poppins(fontSize: 12, color: _textSub),
           ),
           const SizedBox(height: 20),
           _primaryBtn(
-            label: 'Send OTP',
+            label: tr('send_otp'),
             icon: Icons.send_rounded,
             loading: auth.isLoading,
             onTap: _sendOTP,
@@ -501,7 +505,7 @@ class _LoginScreenState extends State<LoginScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'OTP Sent!',
+                        tr('otp_sent'),
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -509,7 +513,10 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ),
                       Text(
-                        'Code sent to ${_country.dialCode} ${_phoneCtrl.text}',
+                        tr('code_sent_to').replaceFirst(
+                          '{}',
+                          '${_country.dialCode} ${_phoneCtrl.text}',
+                        ),
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: _textSub,
@@ -521,7 +528,7 @@ class _LoginScreenState extends State<LoginScreen>
                 GestureDetector(
                   onTap: () => auth.resetPhoneAuth(),
                   child: Text(
-                    'Change',
+                    tr('change'),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -533,7 +540,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
           const SizedBox(height: 20),
-          _label('Enter 6-digit OTP'),
+          _label(tr('enter_6_digit_otp')),
           const SizedBox(height: 10),
           _field(
             ctrl: _otpCtrl,
@@ -544,7 +551,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           const SizedBox(height: 20),
           _primaryBtn(
-            label: 'Verify & Sign In',
+            label: tr('verify_sign_in'),
             icon: Icons.verified_rounded,
             loading: auth.isLoading,
             onTap: _verifyOTP,
@@ -567,7 +574,7 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Resend OTP',
+                    tr('resend_otp'),
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -588,7 +595,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label('Email Address'),
+        _label(tr('email_address')),
         const SizedBox(height: 10),
         _field(
           ctrl: _emailCtrl,
@@ -596,15 +603,15 @@ class _LoginScreenState extends State<LoginScreen>
           icon: Icons.alternate_email_rounded,
           kb: TextInputType.emailAddress,
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Email is required';
+            if (v == null || v.isEmpty) return tr('email_required');
             if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-              return 'Enter a valid email';
+              return tr('enter_valid_email');
             }
             return null;
           },
         ),
         const SizedBox(height: 18),
-        _label('Password'),
+        _label(tr('password')),
         const SizedBox(height: 10),
         _field(
           ctrl: _passCtrl,
@@ -622,8 +629,8 @@ class _LoginScreenState extends State<LoginScreen>
             onPressed: () => setState(() => _obscure = !_obscure),
           ),
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Password is required';
-            if (v.length < 6) return 'Minimum 6 characters';
+            if (v == null || v.isEmpty) return tr('password_required');
+            if (v.length < 6) return tr('minimum_6_characters');
             return null;
           },
         ),
@@ -633,7 +640,7 @@ class _LoginScreenState extends State<LoginScreen>
           child: GestureDetector(
             onTap: auth.isLoading ? null : _forgot,
             child: Text(
-              'Forgot Password?',
+              tr('forgot_password'),
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -644,7 +651,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 24),
         _primaryBtn(
-          label: 'Sign In',
+          label: tr('sign_in'),
           icon: Icons.login_rounded,
           loading: auth.isLoading,
           onTap: _signIn,
@@ -774,7 +781,7 @@ class _LoginScreenState extends State<LoginScreen>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'or',
+            tr('or_divider'),
             style: GoogleFonts.poppins(fontSize: 12, color: _textSub),
           ),
         ),
@@ -805,7 +812,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           const SizedBox(width: 12),
           Text(
-            'Continue with Google',
+            tr('continue_with_google'),
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -822,7 +829,7 @@ class _LoginScreenState extends State<LoginScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          "Don't have an account? ",
+          tr('dont_have_account'),
           style: GoogleFonts.poppins(fontSize: 14, color: _textSub),
         ),
         GestureDetector(
@@ -834,7 +841,7 @@ class _LoginScreenState extends State<LoginScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Sign Up',
+              tr('sign_up'),
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -872,7 +879,7 @@ class _LoginScreenState extends State<LoginScreen>
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(
-                'Select Country',
+                tr('select_country'),
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

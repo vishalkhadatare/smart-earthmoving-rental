@@ -43,6 +43,13 @@ class EquipmentService {
     List<String> specs = const [],
     String providerName = '',
     String ownerPhone = '',
+    String company = '',
+    String soilType = '',
+    String depth = '',
+    String enginePower = '',
+    String bucketCapacity = '',
+    String area = '',
+    String operatingWeight = '',
   }) async {
     final uid = _uid;
     if (uid == null || uid.isEmpty) {
@@ -84,6 +91,13 @@ class EquipmentService {
       description: description,
       specs: specs,
       ownerPhone: ownerPhone,
+      company: company,
+      soilType: soilType,
+      depth: depth,
+      enginePower: enginePower,
+      bucketCapacity: bucketCapacity,
+      area: area,
+      operatingWeight: operatingWeight,
       createdAt: now,
       updatedAt: now,
     );
@@ -380,6 +394,13 @@ class EquipmentProvider extends ChangeNotifier {
     List<String> specs = const [],
     String providerName = '',
     String ownerPhone = '',
+    String company = '',
+    String soilType = '',
+    String depth = '',
+    String enginePower = '',
+    String bucketCapacity = '',
+    String area = '',
+    String operatingWeight = '',
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -401,6 +422,13 @@ class EquipmentProvider extends ChangeNotifier {
         specs: specs,
         providerName: providerName,
         ownerPhone: ownerPhone,
+        company: company,
+        soilType: soilType,
+        depth: depth,
+        enginePower: enginePower,
+        bucketCapacity: bucketCapacity,
+        area: area,
+        operatingWeight: operatingWeight,
       );
       _equipment.insert(0, newEquipment);
       _allEquipment.insert(0, newEquipment);

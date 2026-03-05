@@ -32,6 +32,14 @@ class EquipmentModel {
   final int reviewCount;
   final List<String> specs;
   final EquipmentProviderInfo provider;
+  // Specification parameters
+  final String company;
+  final String soilType;
+  final String depth;
+  final String enginePower;
+  final String bucketCapacity;
+  final String area;
+  final String operatingWeight;
 
   const EquipmentModel({
     required this.id,
@@ -47,6 +55,13 @@ class EquipmentModel {
     this.reviewCount = 0,
     this.specs = const [],
     required this.provider,
+    this.company = '',
+    this.soilType = '',
+    this.depth = '',
+    this.enginePower = '',
+    this.bucketCapacity = '',
+    this.area = '',
+    this.operatingWeight = '',
   });
 
   /// Whether this equipment has user-uploaded photos
@@ -119,7 +134,10 @@ class EquipmentModel {
       reviewCount: fs.reviewCount,
       specs: fs.specs.isNotEmpty
           ? fs.specs
-          : [fs.capacity, '${fs.hourlyRate.toStringAsFixed(0)}/hr'],
+          : [
+              if (fs.capacity.isNotEmpty) fs.capacity,
+              '${fs.hourlyRate.toStringAsFixed(0)}/hr',
+            ],
       provider: EquipmentProviderInfo(
         id: fs.providerId,
         name: fs.providerName.isNotEmpty ? fs.providerName : 'Provider',
@@ -127,6 +145,13 @@ class EquipmentModel {
         rating: fs.rating,
         location: '${fs.district}, ${fs.state}',
       ),
+      company: fs.company,
+      soilType: fs.soilType,
+      depth: fs.depth,
+      enginePower: fs.enginePower,
+      bucketCapacity: fs.bucketCapacity,
+      area: fs.area,
+      operatingWeight: fs.operatingWeight,
     );
   }
 

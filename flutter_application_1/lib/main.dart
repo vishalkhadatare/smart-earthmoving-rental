@@ -1,22 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart' as legacy;
-import 'core/services/favorites_service.dart';
-import 'core/services/notifications_service.dart';
-import 'core/services/stats_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
-import 'features/booking/services/booking_service.dart';
-import 'features/equipment/services/equipment_service.dart';
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   // Initialize Firebase BEFORE first frame so splash is instant
   try {
@@ -49,6 +45,7 @@ Future<void> main() async {
   final authProvider = AuthProvider();
 
   runApp(
+<<<<<<< HEAD
     ProviderScope(
       child: legacy.MultiProvider(
         providers: [
@@ -72,12 +69,45 @@ Future<void> main() async {
           ),
         ],
         child: const EquipProApp(),
+=======
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('hi'), // Hindi
+        Locale('mr'), // Marathi
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      startLocale: const Locale('en'),
+      child: ProviderScope(
+        child: legacy.MultiProvider(
+          providers: [
+            legacy.ChangeNotifierProvider<AuthProvider>.value(
+              value: authProvider,
+            ),
+            legacy.ChangeNotifierProvider<EquipmentProvider>(
+              create: (_) => EquipmentProvider(),
+            ),
+            legacy.ChangeNotifierProvider<BookingProvider>(
+              create: (_) => BookingProvider(),
+            ),
+            legacy.ChangeNotifierProvider<FavoritesProvider>(
+              create: (_) => FavoritesProvider(),
+            ),
+            legacy.ChangeNotifierProvider<StatsProvider>(
+              create: (_) => StatsProvider(),
+            ),
+          ],
+          child: const EquipProApp(),
+        ),
+>>>>>>> 30bced0 (Update project files)
       ),
     ),
   );
 }
 
-class EquipProApp extends ConsumerWidget {  const EquipProApp({super.key});
+class EquipProApp extends ConsumerWidget {
+  const EquipProApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -88,6 +118,9 @@ class EquipProApp extends ConsumerWidget {  const EquipProApp({super.key});
       theme: AppTheme.lightTheme(),
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
     );
   }
 }

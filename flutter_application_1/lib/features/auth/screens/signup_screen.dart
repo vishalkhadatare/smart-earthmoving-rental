@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/account_type.dart';
 import '../providers/auth_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -41,35 +42,35 @@ class _SignupScreenState extends State<SignupScreen>
   static const _border = Color(0xFFE0E0E0);
 
   // ── Role definitions ──
-  static const _roles = <_Role>[
+  static List<_Role> get _roles => <_Role>[
     _Role(
       type: AccountType.owner,
       icon: Icons.construction_rounded,
-      label: 'Owner',
-      sub: 'List equipment, manage bookings & earn',
-      color: Color(0xFFFF6B00),
-      bg: Color(0xFF2A1E10),
-      badge: 'Earn',
+      label: tr('owner_role'),
+      sub: tr('owner_role_desc'),
+      color: const Color(0xFFFF6B00),
+      bg: const Color(0xFF2A1E10),
+      badge: tr('earn'),
       features: [
-        'Add & manage equipment',
-        'Accept / reject bookings',
-        'Earnings dashboard',
-        'Post services',
+        tr('add_manage_equipment'),
+        tr('accept_reject_bookings'),
+        tr('earnings_dashboard'),
+        tr('post_services'),
       ],
     ),
     _Role(
       type: AccountType.user,
       icon: Icons.engineering_rounded,
-      label: 'User',
-      sub: 'Search, book & hire machines for projects',
-      color: Color(0xFF3B82F6),
-      bg: Color(0xFF1E2A40),
-      badge: 'Hire',
+      label: tr('user_role'),
+      sub: tr('user_role_desc'),
+      color: const Color(0xFF3B82F6),
+      bg: const Color(0xFF1E2A40),
+      badge: tr('hire'),
       features: [
-        'Search & browse equipment',
-        'Book equipment instantly',
-        'Track booking status',
-        'Manage your bookings',
+        tr('search_browse_equipment'),
+        tr('book_equipment_instantly'),
+        tr('track_booking_status'),
+        tr('manage_your_bookings'),
       ],
     ),
   ];
@@ -124,12 +125,12 @@ class _SignupScreenState extends State<SignupScreen>
   // ── Actions ──
   Future<void> _signUp() async {
     if (_type == null) {
-      _toast('Choose your account type first');
+      _toast(tr('choose_account_type'));
       return;
     }
     if (!_formKey.currentState!.validate()) return;
     if (!_agreed) {
-      _toast('Please agree to the Terms & Conditions');
+      _toast(tr('agree_terms'));
       return;
     }
     // Phone verification is optional for now; proceed without OTP.
@@ -165,7 +166,7 @@ class _SignupScreenState extends State<SignupScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          m ?? 'Something went wrong',
+          m ?? tr('something_went_wrong'),
           style: GoogleFonts.poppins(fontSize: 13),
         ),
         backgroundColor: Colors.redAccent,
@@ -202,7 +203,7 @@ class _SignupScreenState extends State<SignupScreen>
               ),
               const SizedBox(height: 18),
               Text(
-                'Already Registered',
+                tr('already_registered'),
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -212,7 +213,7 @@ class _SignupScreenState extends State<SignupScreen>
               ),
               const SizedBox(height: 10),
               Text(
-                'This email is already registered.\nSign in or use a different email.',
+                tr('already_registered_msg'),
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: _textSub,
@@ -238,7 +239,7 @@ class _SignupScreenState extends State<SignupScreen>
                     ),
                   ),
                   child: Text(
-                    'Try Another Email',
+                    tr('try_another_email'),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -254,7 +255,7 @@ class _SignupScreenState extends State<SignupScreen>
                   context.read<AuthProvider>().goToLogin();
                 },
                 child: Text(
-                  'Go to Sign In',
+                  tr('go_to_sign_in'),
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -271,6 +272,7 @@ class _SignupScreenState extends State<SignupScreen>
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -308,7 +310,7 @@ class _SignupScreenState extends State<SignupScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // ── Step 1: Role ──
-                              _stepHeader('1', 'I am a...'),
+                              _stepHeader('1', tr('i_am_a')),
                               const SizedBox(height: 14),
                               ..._roles.map(
                                 (r) => Padding(
@@ -319,7 +321,7 @@ class _SignupScreenState extends State<SignupScreen>
                               const SizedBox(height: 28),
 
                               // ── Step 2: Details ──
-                              _stepHeader('2', 'Your Details'),
+                              _stepHeader('2', tr('your_details')),
                               const SizedBox(height: 14),
                               _detailsCard(),
                               const SizedBox(height: 22),
@@ -331,7 +333,7 @@ class _SignupScreenState extends State<SignupScreen>
                               // ── Create account ──
                               Consumer<AuthProvider>(
                                 builder: (_, auth, __) => _primaryBtn(
-                                  label: 'Create Account',
+                                  label: tr('create_account'),
                                   icon: Icons.person_add_rounded,
                                   loading: auth.isLoading,
                                   onTap: _signUp,
@@ -348,13 +350,13 @@ class _SignupScreenState extends State<SignupScreen>
                                     _socialBtn(
                                       onTap: auth.isLoading ? null : _google,
                                       isGoogle: true,
-                                      label: 'Sign up with Google',
+                                      label: tr('sign_up_with_google'),
                                     ),
                                     const SizedBox(height: 10),
                                     _socialBtn(
                                       onTap: auth.isLoading ? null : _phone,
                                       icon: Icons.phone_iphone_rounded,
-                                      label: 'Sign up with Phone',
+                                      label: tr('sign_up_with_phone'),
                                     ),
                                   ],
                                 ),
@@ -401,9 +403,9 @@ class _SignupScreenState extends State<SignupScreen>
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: _accent.withOpacity(0.15)),
               ),
-              child: const Text(
-                '✨ Get started',
-                style: TextStyle(
+              child: Text(
+                tr('get_started'),
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: _accent,
@@ -412,7 +414,7 @@ class _SignupScreenState extends State<SignupScreen>
             ),
             const SizedBox(height: 14),
             Text(
-              'Create Your\nAccount',
+              tr('create_your_account'),
               style: GoogleFonts.poppins(
                 fontSize: 32,
                 fontWeight: FontWeight.w800,
@@ -422,7 +424,7 @@ class _SignupScreenState extends State<SignupScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Join 5,000+ construction professionals',
+              tr('join_professionals'),
               style: GoogleFonts.poppins(fontSize: 14, color: _textSub),
             ),
           ],
@@ -470,7 +472,7 @@ class _SignupScreenState extends State<SignupScreen>
         ),
         const SizedBox(width: 7),
         Text(
-          'EquipPro',
+          tr('equippro'),
           style: GoogleFonts.poppins(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -635,20 +637,20 @@ class _SignupScreenState extends State<SignupScreen>
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label('Full Name'),
+        _label(tr('full_name')),
         const SizedBox(height: 10),
         _field(
           ctrl: _nameCtrl,
           hint: 'Rajesh Kumar',
           icon: Icons.person_outline_rounded,
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Name is required';
-            if (v.length < 2) return 'Minimum 2 characters';
+            if (v == null || v.isEmpty) return tr('name_required');
+            if (v.length < 2) return tr('minimum_2_characters');
             return null;
           },
         ),
         const SizedBox(height: 16),
-        _label('Email Address'),
+        _label(tr('email_address')),
         const SizedBox(height: 10),
         _field(
           ctrl: _emailCtrl,
@@ -656,14 +658,15 @@ class _SignupScreenState extends State<SignupScreen>
           icon: Icons.alternate_email_rounded,
           kb: TextInputType.emailAddress,
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Email is required';
+            if (v == null || v.isEmpty) return tr('email_required');
             if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-              return 'Enter a valid email';
+              return tr('enter_valid_email');
             }
             return null;
           },
         ),
         const SizedBox(height: 16),
+<<<<<<< HEAD
         _label('Phone Number (optional)'),
         const SizedBox(height: 10),
         _field(
@@ -679,6 +682,9 @@ class _SignupScreenState extends State<SignupScreen>
         ),
         const SizedBox(height: 16),
         _label('Password'),
+=======
+        _label(tr('password')),
+>>>>>>> 30bced0 (Update project files)
         const SizedBox(height: 10),
         _field(
           ctrl: _passCtrl,
@@ -694,13 +700,13 @@ class _SignupScreenState extends State<SignupScreen>
             onPressed: () => setState(() => _ob1 = !_ob1),
           ),
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Password is required';
-            if (v.length < 6) return 'Minimum 6 characters';
+            if (v == null || v.isEmpty) return tr('password_required');
+            if (v.length < 6) return tr('minimum_6_characters');
             return null;
           },
         ),
         const SizedBox(height: 16),
-        _label('Confirm Password'),
+        _label(tr('confirm_password')),
         const SizedBox(height: 10),
         _field(
           ctrl: _confirmCtrl,
@@ -716,8 +722,8 @@ class _SignupScreenState extends State<SignupScreen>
             onPressed: () => setState(() => _ob2 = !_ob2),
           ),
           validator: (v) {
-            if (v == null || v.isEmpty) return 'Please confirm password';
-            if (v != _passCtrl.text) return 'Passwords do not match';
+            if (v == null || v.isEmpty) return tr('please_confirm_password');
+            if (v != _passCtrl.text) return tr('passwords_not_match');
             return null;
           },
         ),
@@ -747,11 +753,11 @@ class _SignupScreenState extends State<SignupScreen>
         Expanded(
           child: Text.rich(
             TextSpan(
-              text: 'I agree to the ',
+              text: tr('agree_to'),
               style: GoogleFonts.poppins(fontSize: 13, color: _textSub),
               children: [
                 TextSpan(
-                  text: 'Terms & Conditions',
+                  text: tr('terms_conditions'),
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -916,7 +922,7 @@ class _SignupScreenState extends State<SignupScreen>
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'or',
+            tr('or_divider'),
             style: GoogleFonts.poppins(fontSize: 12, color: _textSub),
           ),
         ),
@@ -972,7 +978,7 @@ class _SignupScreenState extends State<SignupScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Already have an account? ',
+          tr('already_have_account'),
           style: GoogleFonts.poppins(fontSize: 14, color: _textSub),
         ),
         GestureDetector(
@@ -984,7 +990,7 @@ class _SignupScreenState extends State<SignupScreen>
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Sign In',
+              tr('sign_in'),
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

@@ -102,7 +102,7 @@ class _ProviderDetailsScreenState extends State<ProviderDetailsScreen> {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.star_rounded,
                                       size: 16,
                                       color: Colors.amber,
@@ -140,7 +140,7 @@ class _ProviderDetailsScreenState extends State<ProviderDetailsScreen> {
                       // Location
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.location_on_rounded,
                             size: 18,
                             color: _accent,
@@ -163,7 +163,7 @@ class _ProviderDetailsScreenState extends State<ProviderDetailsScreen> {
                       // Phone
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.phone_rounded,
                             size: 18,
                             color: _accent,

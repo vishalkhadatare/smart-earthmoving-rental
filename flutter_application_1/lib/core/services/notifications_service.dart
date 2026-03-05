@@ -85,7 +85,9 @@ class NotificationsProvider extends ChangeNotifier {
   }
 
   void markAllSeen() {
-    for (final n in _items) n.seen = true;
+    for (final n in _items) {
+      n.seen = true;
+    }
     notifyListeners();
   }
 

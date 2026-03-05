@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -31,6 +32,14 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
   final _descCtrl = TextEditingController();
   final _ownerNameCtrl = TextEditingController();
   final _ownerPhoneCtrl = TextEditingController();
+  // Specification controllers
+  final _companyCtrl = TextEditingController();
+  final _soilTypeCtrl = TextEditingController();
+  final _depthCtrl = TextEditingController();
+  final _enginePowerCtrl = TextEditingController();
+  final _bucketCapacityCtrl = TextEditingController();
+  final _areaCtrl = TextEditingController();
+  final _operatingWeightCtrl = TextEditingController();
   MachineType _selectedType = MachineType.excavator;
   String? _selectedDistrict;
   bool _isLoading = false;
@@ -65,6 +74,13 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
     _descCtrl.dispose();
     _ownerNameCtrl.dispose();
     _ownerPhoneCtrl.dispose();
+    _companyCtrl.dispose();
+    _soilTypeCtrl.dispose();
+    _depthCtrl.dispose();
+    _enginePowerCtrl.dispose();
+    _bucketCapacityCtrl.dispose();
+    _areaCtrl.dispose();
+    _operatingWeightCtrl.dispose();
     super.dispose();
   }
 
@@ -178,12 +194,12 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: Text('Cancel', style: GoogleFonts.poppins()),
+                  child: Text(tr('cancel'), style: GoogleFonts.poppins()),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   child: Text(
-                    'Continue Without Photos',
+                    tr('continue_without_photos'),
                     style: GoogleFonts.poppins(
                       color: _accent,
                       fontWeight: FontWeight.w600,
@@ -221,6 +237,13 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
         description: _descCtrl.text.trim(),
         providerName: _ownerNameCtrl.text.trim(),
         ownerPhone: _ownerPhoneCtrl.text.trim(),
+        company: _companyCtrl.text.trim(),
+        soilType: _soilTypeCtrl.text.trim(),
+        depth: _depthCtrl.text.trim(),
+        enginePower: _enginePowerCtrl.text.trim(),
+        bucketCapacity: _bucketCapacityCtrl.text.trim(),
+        area: _areaCtrl.text.trim(),
+        operatingWeight: _operatingWeightCtrl.text.trim(),
       );
 
       if (!mounted) return;
@@ -229,7 +252,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
       if (ok) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Equipment added successfully!'),
+            content: Text(tr('equipment_added_success')),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -261,6 +284,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
@@ -271,7 +295,7 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Add Equipment',
+          tr('post_equipment'),
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -402,6 +426,104 @@ class _AddEquipmentScreenState extends State<AddEquipmentScreen> {
                 hint: 'Describe your equipment...',
                 icon: Icons.description_outlined,
                 maxLines: 4,
+              ),
+              const SizedBox(height: 24),
+
+              // ─── SPECIFICATION PARAMETERS ───
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F8FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.settings_outlined,
+                          size: 20,
+                          color: Color(0xFF3B82F6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Specification Parameters',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: _dark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Technical details help users choose the right equipment',
+                      style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Company'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _companyCtrl,
+                      hint: 'e.g. Tata, L&T, Volvo',
+                      icon: Icons.business_outlined,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Soil Type'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _soilTypeCtrl,
+                      hint: 'e.g. Clay, Sandy, Rocky',
+                      icon: Icons.landscape_outlined,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Depth'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _depthCtrl,
+                      hint: 'e.g. 6m, 12 feet',
+                      icon: Icons.vertical_align_bottom_rounded,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Engine Power'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _enginePowerCtrl,
+                      hint: 'e.g. 120 HP, 90 kW',
+                      icon: Icons.bolt_rounded,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Bucket Capacity'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _bucketCapacityCtrl,
+                      hint: 'e.g. 0.9 m³, 1.2 m³',
+                      icon: Icons.water_outlined,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Area'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _areaCtrl,
+                      hint: 'e.g. 500 sqft, 2 acres/hr',
+                      icon: Icons.crop_square_rounded,
+                    ),
+                    const SizedBox(height: 14),
+                    _label('Operating Weight'),
+                    const SizedBox(height: 8),
+                    _field(
+                      ctrl: _operatingWeightCtrl,
+                      hint: 'e.g. 20 Ton, 8500 kg',
+                      icon: Icons.scale_rounded,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 

@@ -52,7 +52,10 @@ service cloud.firestore {
         (resource.data.providerId == request.auth.uid || isAdmin() ||
          // Allow booking-related fields to be updated by any authenticated user
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['availabilityStatus', 'totalBookings', 'updatedAt']));
+           .hasOnly(['availabilityStatus', 'totalBookings', 'updatedAt']) ||
+         // Allow review-related fields to be updated by any authenticated user
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['rating', 'reviewCount']));
       allow delete: if isAuthenticated() &&
         (resource.data.providerId == request.auth.uid || isAdmin());
     }
@@ -96,6 +99,20 @@ service cloud.firestore {
       // System creates/updates earnings
       allow create, update: if isAuthenticated();
       allow delete: if isAdmin();
+    }
+
+    // ── Reviews collection ──
+    match /reviews/{reviewId} {
+      // Any authenticated user can read reviews
+      allow read: if isAuthenticated();
+      // Authenticated user can create a review with their own userId
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      // User can update/delete their own review; admin can manage all
+      allow update: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // ── Platform stats (authenticated read, system write) ──

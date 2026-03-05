@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -85,12 +86,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    context.locale; // rebuild on locale change
     // Watch provider so UI rebuilds when data loads from Firestore
     context.watch<equip_svc.EquipmentProvider>();
 
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
+<<<<<<< HEAD
         child: CustomScrollView(
           slivers: [
             // 1. Header
@@ -170,6 +173,81 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
+=======
+        child: RefreshIndicator(
+          color: const Color(0xFFFF6B00),
+          onRefresh: () async {
+            context.read<equip_svc.EquipmentProvider>().loadAllEquipment();
+            context.read<StatsProvider>().loadPlatformStats();
+          },
+          child: CustomScrollView(
+            slivers: [
+              // 1. Header
+              SliverToBoxAdapter(child: _buildHeader()),
+              // 2. Search bar
+              SliverToBoxAdapter(child: _buildSearchBar()),
+              // 3. Banner carousel
+              SliverToBoxAdapter(child: _buildBannerCarousel()),
+              // 4. Quick stats
+              SliverToBoxAdapter(child: _buildQuickStats()),
+              // 5. Categories
+              SliverToBoxAdapter(child: _buildCategoryChips()),
+              // 6. Featured equipment (horizontal)
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  tr('featured_equipment'),
+                  tr('top_rated'),
+                  onViewAll: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(child: _buildFeaturedEquipment()),
+              // 7. Top Providers
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  tr('top_providers'),
+                  tr('trusted'),
+                  onViewAll: () => _showAllProviders(),
+                ),
+              ),
+              SliverToBoxAdapter(child: _buildTopProviders()),
+              // 8. How it works
+              SliverToBoxAdapter(child: _buildHowItWorks()),
+              // 9. Recently added (horizontal)
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  tr('recently_added'),
+                  tr('new_badge'),
+                  onViewAll: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(child: _buildRecentlyAdded()),
+              // 10. Available equipment (vertical feed)
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  tr('all_equipment'),
+                  '${_filteredEquipment.length} found',
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) =>
+                        _buildEquipmentCard(_filteredEquipment[index]),
+                    childCount: _filteredEquipment.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
+>>>>>>> 30bced0 (Update project files)
         ),
       ),
     );
@@ -219,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Welcome back,',
+                  tr('welcome_back'),
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     color: _sub,
@@ -368,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Search excavators, bulldozers...',
+                  tr('search_placeholder'),
                   style: GoogleFonts.poppins(fontSize: 14, color: _sub),
                 ),
               ),
@@ -411,28 +489,28 @@ class _HomeScreenState extends State<HomeScreen> {
         .length;
     final banners = [
       _BannerData(
-        'Rent Heavy Equipment\nAt Best Rates',
+        tr('rent_heavy_equipment'),
         equipCount > 0
-            ? '$equipCount+ machines available'
-            : 'Browse & book instantly',
-        'TRENDING',
+            ? tr('machines_available').replaceFirst('{}', '$equipCount')
+            : tr('browse_book_instantly'),
+        tr('trending'),
         const [Color(0xFFFF6B00), Color(0xFFFF9A44)],
         Icons.construction_rounded,
       ),
       _BannerData(
-        'Post Your Equipment\n& Earn Daily',
+        tr('post_equipment_earn'),
         providerCount > 0
-            ? 'Join $providerCount+ equipment owners'
-            : 'Start earning today',
-        'EARN',
+            ? tr('join_equipment_owners').replaceFirst('{}', '$providerCount')
+            : tr('start_earning_today'),
+        tr('earn_badge'),
         const [Color(0xFF6C63FF), Color(0xFF8B83FF)],
         Icons.monetization_on_rounded,
       ),
-      const _BannerData(
-        'Verified Operators\nAvailable 24/7',
-        'Skilled & experienced crew',
-        'NEW',
-        [Color(0xFF00B894), Color(0xFF55E6C1)],
+      _BannerData(
+        tr('verified_operators'),
+        tr('skilled_experienced_crew'),
+        tr('new_badge'),
+        const [Color(0xFF00B894), Color(0xFF55E6C1)],
         Icons.engineering_rounded,
       ),
     ];
@@ -572,13 +650,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ps.totalEquipment > 0
             ? '${ps.totalEquipment}+'
             : '${_allEquipmentUI.length}+',
-        'Equipment',
+        tr('equipment'),
         const Color(0xFFFF6B00),
       ),
       _StatData(
         Icons.people_rounded,
         ps.totalProviders > 0 ? '${ps.totalProviders}+' : '0',
-        'Providers',
+        tr('providers'),
         const Color(0xFF6C63FF),
       ),
       _StatData(
@@ -586,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ps.totalCities > 0
             ? '${ps.totalCities}+'
             : '${_allEquipmentUI.map((e) => e.provider.location).toSet().length}',
-        'Cities',
+        tr('cities'),
         const Color(0xFF00B894),
       ),
       _StatData(
@@ -598,7 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _allEquipmentUI.length)
                   .toStringAsFixed(1)
             : '0.0',
-        'Avg Rating',
+        tr('avg_rating'),
         const Color(0xFFFFB800),
       ),
     ];
@@ -608,51 +686,57 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: stats.map((s) {
           return Expanded(
-            child: Container(
-              margin: EdgeInsets.only(right: s != stats.last ? 10 : 0),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                color: _card,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SearchScreen()),
               ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: s.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+              child: Container(
+                margin: EdgeInsets.only(right: s != stats.last ? 10 : 0),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: _card,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Icon(s.icon, size: 20, color: s.color),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    s.value,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: _dark,
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: s.color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(s.icon, size: 20, color: s.color),
                     ),
-                  ),
-                  Text(
-                    s.label,
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      color: _sub,
-                      fontWeight: FontWeight.w500,
+                    const SizedBox(height: 8),
+                    Text(
+                      s.value,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: _dark,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      s.label,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        color: _sub,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ), // GestureDetector
           );
         }).toList(),
       ),
@@ -1000,6 +1084,7 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: providers.length,
         itemBuilder: (context, index) {
           final p = providers[index];
+<<<<<<< HEAD
           return Padding(
             padding: const EdgeInsets.only(right: 12),
             child: InkWell(
@@ -1053,34 +1138,336 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
+=======
+          final colors = [
+            [const Color(0xFFFF6B00), const Color(0xFFFF9A44)],
+            [const Color(0xFF6C63FF), const Color(0xFF8B83FF)],
+            [const Color(0xFF00B894), const Color(0xFF55E6C1)],
+            [const Color(0xFFE17055), const Color(0xFFF19066)],
+            [const Color(0xFF0984E3), const Color(0xFF74B9FF)],
+            [const Color(0xFF6D214F), const Color(0xFFB33771)],
+          ];
+          final gradientColors = colors[index % colors.length];
+
+          return GestureDetector(
+            onTap: () => _showProviderDetail(p),
+            child: Container(
+              width: 150,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: _card,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: gradientColors),
+                      boxShadow: [
+                        BoxShadow(
+                          color: gradientColors[0].withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        p.provider.name[0].toUpperCase(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    p.provider.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _dark,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: Color(0xFFFFB800),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        p.provider.rating.toStringAsFixed(1),
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _dark,
+                        ),
+                      ),
+                      Text(
+                        ' · ${p.count} ads',
+                        style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: _sub,
+                      ),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          p.provider.location.split(',').first,
+                          style: GoogleFonts.poppins(fontSize: 10, color: _sub),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+>>>>>>> 30bced0 (Update project files)
               ),
             ),
           );
-        },
+        
+return null;},
       ),
     );
   }
 
-  // ─── 8. HOW IT WORKS ───────────────────────────────────────────
+  void _showProviderDetail(_ProviderDisplayData p) {
+    final providerEquipment = _allEquipmentUI
+        .where((e) => e.provider.id == p.provider.id)
+        .toList();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ProviderDetailSheet(
+        provider: p.provider,
+        equipment: providerEquipment,
+        equipmentCount: p.count,
+      ),
+    );
+  }
+
+  void _showAllProviders() {
+    final providerMap = <String, _ProviderDisplayData>{};
+    for (final e in _allEquipmentUI) {
+      if (!providerMap.containsKey(e.provider.id)) {
+        providerMap[e.provider.id] = _ProviderDisplayData(
+          e.provider,
+          1,
+          e.imageAsset,
+        );
+      } else {
+        providerMap[e.provider.id] = _ProviderDisplayData(
+          e.provider,
+          providerMap[e.provider.id]!.count + 1,
+          providerMap[e.provider.id]!.sampleImage,
+        );
+      }
+    }
+    final providers = providerMap.values.toList()
+      ..sort((a, b) => b.provider.rating.compareTo(a.provider.rating));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF7F7F7),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      tr('top_providers'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: _dark,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${providers.length} providers',
+                      style: GoogleFonts.poppins(fontSize: 13, color: _sub),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  itemCount: providers.length,
+                  itemBuilder: (_, i) {
+                    final pd = providers[i];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(sheetCtx);
+                        _showProviderDetail(pd);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: _accent,
+                              child: Text(
+                                pd.provider.name[0].toUpperCase(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    pd.provider.name,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _dark,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 14,
+                                        color: Color(0xFFFFB800),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      Text(
+                                        pd.provider.rating.toStringAsFixed(1),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: _dark,
+                                        ),
+                                      ),
+                                      Text(
+                                        ' · ${pd.count} items',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: _sub,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    pd.provider.location.split(',').first,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      color: _sub,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Color(0xFFBBBBCC),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHowItWorks() {
     final steps = [
-      const _StepData(
+      _StepData(
         Icons.search_rounded,
-        'Browse',
-        'Find equipment\nnear you',
-        Color(0xFFFF6B00),
+        tr('browse'),
+        tr('find_equipment_near'),
+        const Color(0xFFFF6B00),
       ),
-      const _StepData(
+      _StepData(
         Icons.phone_in_talk_rounded,
-        'Contact',
-        'Call the\nprovider',
-        Color(0xFF6C63FF),
+        tr('contact'),
+        tr('call_provider'),
+        const Color(0xFF6C63FF),
       ),
-      const _StepData(
+      _StepData(
         Icons.handshake_rounded,
-        'Book',
-        'Confirm &\nstart work',
-        Color(0xFF00B894),
+        tr('book'),
+        tr('confirm_start_work'),
+        const Color(0xFF00B894),
       ),
     ];
 
@@ -1109,7 +1496,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Text(
-                  'How It Works',
+                  tr('how_it_works'),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -1127,7 +1514,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '3 Easy Steps',
+                    tr('three_easy_steps'),
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1270,7 +1657,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'NEW',
+                            tr('new_badge'),
                             style: GoogleFonts.poppins(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
@@ -1355,7 +1742,7 @@ class _HomeScreenState extends State<HomeScreen> {
     VoidCallback? onViewAll,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1367,6 +1754,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: _dark,
             ),
           ),
+<<<<<<< HEAD
           Row(
             children: [
               Container(
@@ -1404,6 +1792,48 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             ],
           ),
+=======
+          onViewAll != null
+              ? GestureDetector(
+                  onTap: onViewAll,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _accentLight,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'View All',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _accent,
+                      ),
+                    ),
+                  ),
+                )
+              : Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _accentLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    trailing,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _accent,
+                    ),
+                  ),
+                ),
+>>>>>>> 30bced0 (Update project files)
         ],
       ),
     );
@@ -1476,7 +1906,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Available',
+                            tr('available_badge'),
                             style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -1737,7 +2167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Phone number not available',
+                                  tr('phone_not_available'),
                                   style: GoogleFonts.poppins(),
                                 ),
                                 backgroundColor: _accent,
@@ -1779,7 +2209,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                           if (phone.isNotEmpty) {
                             final message = Uri.encodeComponent(
-                              'Hi, I am interested in renting your ${equipment.name} (${equipment.model}). Is it available?',
+                              tr('whatsapp_interest_msg').replaceFirst(
+                                '{}',
+                                '${equipment.name} (${equipment.model})',
+                              ),
                             );
                             launchUrl(
                               Uri.parse(
@@ -1790,7 +2223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Contact info not available',
+                                  tr('contact_not_available'),
                                   style: GoogleFonts.poppins(),
                                 ),
                                 backgroundColor: _accent,
@@ -1906,7 +2339,7 @@ class _FavoritesSheet extends StatelessWidget {
                 const Icon(Icons.favorite_rounded, color: Color(0xFFFF6B00)),
                 const SizedBox(width: 10),
                 Text(
-                  'My Favorites',
+                  tr('my_favorites'),
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1938,7 +2371,7 @@ class _FavoritesSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No favorites yet',
+                          tr('no_favorites_yet'),
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -1947,7 +2380,7 @@ class _FavoritesSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Tap the heart icon on equipment\nto save them here',
+                          tr('tap_heart_to_save'),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 13,
@@ -2010,6 +2443,374 @@ class _FavoritesSheet extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet showing a provider's profile + equipment list
+class _ProviderDetailSheet extends StatelessWidget {
+  final EquipmentProviderInfo provider;
+  final List<EquipmentModel> equipment;
+  final int equipmentCount;
+
+  const _ProviderDetailSheet({
+    required this.provider,
+    required this.equipment,
+    required this.equipmentCount,
+  });
+
+  static const _accent = Color(0xFFFF6B00);
+  static const _dark = Color(0xFF1A1A2E);
+  static const _sub = Color(0xFF8F90A6);
+  static const _bg = Color(0xFFF7F7F7);
+  static const _card = Colors.white;
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (_, scrollCtrl) => Container(
+        decoration: const BoxDecoration(
+          color: _bg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Provider header
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: _card,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF6B00), Color(0xFFFF9A44)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _accent.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            provider.name.isNotEmpty
+                                ? provider.name[0].toUpperCase()
+                                : 'P',
+                            style: GoogleFonts.poppins(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    provider.name,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: _dark,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 18,
+                                  color: Color(0xFF0984E3),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 14,
+                                  color: Color(0xFFFFB800),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  provider.rating.toStringAsFixed(1),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _dark,
+                                  ),
+                                ),
+                                Text(
+                                  '  ·  $equipmentCount equipment',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: _sub,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (provider.location.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on_outlined,
+                                      size: 13,
+                                      color: _sub,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Expanded(
+                                      child: Text(
+                                        provider.location,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: _sub,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (provider.phone.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              final phone = provider.phone.replaceAll(
+                                RegExp(r'[\s-]'),
+                                '',
+                              );
+                              launchUrl(Uri.parse('tel:$phone'));
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00C853),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.phone_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    provider.phone,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Equipment list header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Row(
+                children: [
+                  Text(
+                    'Equipment',
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: _dark,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${equipment.length} listings',
+                    style: GoogleFonts.poppins(fontSize: 13, color: _sub),
+                  ),
+                ],
+              ),
+            ),
+            // Equipment list
+            Expanded(
+              child: equipment.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No equipment listed yet',
+                        style: GoogleFonts.poppins(color: _sub),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollCtrl,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      itemCount: equipment.length,
+                      itemBuilder: (ctx, i) {
+                        final e = equipment[i];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    EquipmentDetailsScreen(equipment: e),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _card,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: SizedBox(
+                                    width: 60,
+                                    height: 60,
+                                    child: EquipmentImage(
+                                      imageUrls: e.imageUrls,
+                                      fallbackAsset: e.imageAsset,
+                                      fit: BoxFit.contain,
+                                      width: 60,
+                                      height: 60,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        e.name,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: _dark,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        e.model,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: _sub,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '₹${e.pricePerHour.toStringAsFixed(0)}/hr',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          color: _accent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: e.isAvailable
+                                        ? const Color(
+                                            0xFF00C853,
+                                          ).withValues(alpha: 0.1)
+                                        : Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    e.isAvailable ? 'Available' : 'Unavailable',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: e.isAvailable
+                                          ? const Color(0xFF00C853)
+                                          : Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
