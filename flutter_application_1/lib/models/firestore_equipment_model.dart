@@ -78,6 +78,7 @@ class FirestoreEquipmentModel {
   final double hourlyRate;
   final double dailyRate;
   final bool availabilityStatus;
+  final String machineStatus; // 'active', 'maintenance', 'inactive'
   final String district;
   final String state;
   final GeoPoint location;
@@ -110,6 +111,7 @@ class FirestoreEquipmentModel {
     required this.hourlyRate,
     this.dailyRate = 0,
     this.availabilityStatus = true,
+    this.machineStatus = 'active',
     required this.district,
     this.state = '',
     required this.location,
@@ -144,6 +146,7 @@ class FirestoreEquipmentModel {
       'hourlyRate': hourlyRate,
       'dailyRate': dailyRate,
       'availabilityStatus': availabilityStatus,
+      'machineStatus': machineStatus,
       'district': district,
       'state': state,
       'location': location,
@@ -178,6 +181,7 @@ class FirestoreEquipmentModel {
       hourlyRate: (map['hourlyRate'] ?? 0).toDouble(),
       dailyRate: (map['dailyRate'] ?? 0).toDouble(),
       availabilityStatus: map['availabilityStatus'] ?? true,
+      machineStatus: map['machineStatus'] ?? 'active',
       district: map['district'] ?? '',
       state: map['state'] ?? '',
       location: map['location'] ?? const GeoPoint(0, 0),
@@ -216,6 +220,7 @@ class FirestoreEquipmentModel {
     double? hourlyRate,
     double? dailyRate,
     bool? availabilityStatus,
+    String? machineStatus,
     String? district,
     String? state,
     GeoPoint? location,
@@ -245,6 +250,7 @@ class FirestoreEquipmentModel {
       hourlyRate: hourlyRate ?? this.hourlyRate,
       dailyRate: dailyRate ?? this.dailyRate,
       availabilityStatus: availabilityStatus ?? this.availabilityStatus,
+      machineStatus: machineStatus ?? this.machineStatus,
       district: district ?? this.district,
       state: state ?? this.state,
       location: location ?? this.location,

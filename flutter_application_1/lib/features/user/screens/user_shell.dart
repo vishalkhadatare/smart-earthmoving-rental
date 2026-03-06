@@ -1,8 +1,8 @@
-import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,7 +16,9 @@ import '../../equipment/services/equipment_service.dart' as equip_svc;
 import '../../home/models/equipment_model.dart';
 import '../../home/screens/equipment_details_screen.dart';
 import '../../home/screens/home_screen.dart';
-import '../../notifications/notifications_screen.dart';
+import 'smart_recommendation_screen.dart';
+import 'compare_equipment_screen.dart';
+import 'edit_profile_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // User Shell — 4-tab bottom nav
@@ -35,13 +37,19 @@ class _UserShellState extends State<UserShell> {
   static const Color _accent = Color(0xFF3B82F6);
   static const Color _sub = Color(0xFFBBBBCC);
 
-  final List<Widget> _pages = const [
-    HomeScreen(),
-    _UserBookings(),
-    // Use the new notifications screen
-    NotificationsScreen(),
-    _UserProfile(),
-  ];
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomeScreen(),
+      const _UserBookings(),
+      CompareEquipmentScreen(onBackPressed: () => setState(() => _idx = 0)),
+      SmartRecommendationScreen(onBackPressed: () => setState(() => _idx = 0)),
+      const _UserProfile(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +74,47 @@ class _UserShellState extends State<UserShell> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _nav(Icons.home_rounded, tr('home'), 0),
-                _nav(Icons.event_note_rounded, tr('my_bookings'), 1),
-                _nav(Icons.notifications_none_rounded, tr('notifications'), 2),
-                _nav(Icons.person_outline_rounded, tr('profile'), 3),
+                Expanded(
+                  child: _nav(
+                    Icons.home_outlined,
+                    Icons.home_rounded,
+                    tr('home'),
+                    0,
+                  ),
+                ),
+                Expanded(
+                  child: _nav(
+                    Icons.event_note_outlined,
+                    Icons.event_note_rounded,
+                    tr('my_bookings'),
+                    1,
+                  ),
+                ),
+                Expanded(
+                  child: _nav(
+                    Icons.difference_outlined,
+                    Icons.difference_rounded,
+                    'Compare',
+                    2,
+                  ),
+                ),
+                Expanded(
+                  child: _nav(
+                    Icons.tips_and_updates_outlined,
+                    Icons.tips_and_updates_rounded,
+                    'Recommend',
+                    3,
+                  ),
+                ),
+                Expanded(
+                  child: _nav(
+                    Icons.person_outline_rounded,
+                    Icons.person_rounded,
+                    tr('profile'),
+                    4,
+                  ),
+                ),
               ],
             ),
           ),
@@ -80,28 +123,44 @@ class _UserShellState extends State<UserShell> {
     );
   }
 
-  Widget _nav(IconData icon, String label, int i) {
+  Widget _nav(IconData iconOutlined, IconData iconFilled, String label, int i) {
     final on = _idx == i;
     return GestureDetector(
-      onTap: () => setState(() => _idx = i),
+      onTap: () {
+        if (i == 2) {
+          context.read<equip_svc.EquipmentProvider>().loadAllEquipment();
+        }
+        setState(() => _idx = i);
+      },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         decoration: BoxDecoration(
-          color: on ? _accent.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          color: on ? _accent.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: on ? _accent : _sub),
-            const SizedBox(height: 3),
+            AnimatedScale(
+              scale: on ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                on ? iconFilled : iconOutlined,
+                size: 24,
+                color: on ? _accent : _sub,
+              ),
+            ),
+            const SizedBox(height: 4),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: on ? FontWeight.w600 : FontWeight.w500,
                 color: on ? _accent : _sub,
               ),
             ),
@@ -129,10 +188,11 @@ class _UserShellState extends State<UserShell> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.construction_rounded,
-                    color: Colors.white,
-                    size: 36,
+                  Image.asset(
+                    'assets/images/app_logo.jpeg',
+                    width: 52,
+                    height: 52,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -161,11 +221,10 @@ class _UserShellState extends State<UserShell> {
               const Color(0xFF3B82F6),
               () {
                 Navigator.pop(context);
-                context.read<equip_svc.EquipmentProvider>().loadAllEquipment();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const _RecommendationsScreen(),
+                    builder: (_) => const SmartRecommendationScreen(),
                   ),
                 );
               },
@@ -181,7 +240,7 @@ class _UserShellState extends State<UserShell> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const _CompareEquipmentScreen(),
+                    builder: (_) => const CompareEquipmentScreen(),
                   ),
                 );
               },
@@ -205,6 +264,26 @@ class _UserShellState extends State<UserShell> {
               () {
                 Navigator.pop(context);
                 setState(() => _idx = 1);
+              },
+            ),
+            _drawerItem(
+              context,
+              Icons.notifications_none_rounded,
+              tr('notifications'),
+              const Color(0xFF3B82F6),
+              () {
+                Navigator.pop(context);
+                setState(() => _idx = 3);
+              },
+            ),
+            _drawerItem(
+              context,
+              Icons.person_outline_rounded,
+              tr('profile'),
+              const Color(0xFF3B82F6),
+              () {
+                Navigator.pop(context);
+                setState(() => _idx = 4);
               },
             ),
           ],
@@ -529,8 +608,8 @@ class _UserProfile extends StatefulWidget {
 
 class _UserProfileState extends State<_UserProfile> {
   static const Color _bg = Color(0xFFF7F7F7);
-  static const Color _accent = Color(0xFF3B82F6);
-  static const Color _accentLight = Color(0xFFEBF2FF);
+  static const Color _accent = Color(0xFFFF6B00);
+  static const Color _accentLight = Color(0xFFFFF3E8);
   static const Color _dark = Color(0xFF1A1A2E);
   static const Color _sub = Color(0xFF8F90A6);
   static const Color _card = Colors.white;
@@ -634,7 +713,7 @@ class _UserProfileState extends State<_UserProfile> {
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                    colors: [Color(0xFFFF6B00), Color(0xFFFF9A44)],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
@@ -648,7 +727,12 @@ class _UserProfileState extends State<_UserProfile> {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () => _showEditProfileSheet(auth),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfileScreen(),
+                        ),
+                      ),
                       child: Stack(
                         children: [
                           Container(
@@ -684,14 +768,14 @@ class _UserProfileState extends State<_UserProfile> {
                                 color: Colors.white,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: const Color(0xFF3B82F6),
+                                  color: _accent,
                                   width: 2,
                                 ),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.edit_rounded,
                                 size: 14,
-                                color: Color(0xFF3B82F6),
+                                color: _accent,
                               ),
                             ),
                           ),
@@ -758,7 +842,12 @@ class _UserProfileState extends State<_UserProfile> {
                 _M(
                   Icons.person_outline_rounded,
                   tr('edit_profile'),
-                  onTap: () => _showEditProfileSheet(auth),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  ),
                 ),
                 _M(
                   Icons.calendar_today_rounded,
@@ -794,18 +883,13 @@ class _UserProfileState extends State<_UserProfile> {
                   Icons.payment_outlined,
                   tr('payment_methods'),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          tr('cash_on_delivery_msg'),
-                          style: GoogleFonts.poppins(),
-                        ),
-                        backgroundColor: _accent,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+                    if (uid == null) return;
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => _UserPaymentSheet(uid: uid),
                     );
                   },
                 ),
@@ -920,217 +1004,6 @@ class _UserProfileState extends State<_UserProfile> {
       ),
     ),
   );
-
-  void _showEditProfileSheet(AuthProvider auth) {
-    final nameCtrl = TextEditingController(text: auth.userName);
-    final phoneCtrl = TextEditingController(text: auth.userPhone ?? '');
-    File? pickedFile;
-    bool isSaving = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  tr('edit_profile'),
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A2E),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Avatar picker
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await ImagePicker().pickImage(
-                      source: ImageSource.gallery,
-                      maxWidth: 600,
-                      imageQuality: 75,
-                    );
-                    if (picked != null) {
-                      setSheetState(() => pickedFile = File(picked.path));
-                    }
-                  },
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 46,
-                        backgroundColor: _accentLight,
-                        backgroundImage: pickedFile != null
-                            ? FileImage(pickedFile!) as ImageProvider
-                            : (auth.userPhotoUrl != null
-                                  ? NetworkImage(auth.userPhotoUrl!)
-                                  : null),
-                        child: pickedFile == null && auth.userPhotoUrl == null
-                            ? Text(
-                                auth.userName.isNotEmpty
-                                    ? auth.userName[0].toUpperCase()
-                                    : 'U',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.w700,
-                                  color: _accent,
-                                ),
-                              )
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: _accent,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt_rounded,
-                            size: 15,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Name field
-                TextField(
-                  controller: nameCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  style: GoogleFonts.poppins(color: const Color(0xFF1C1C1E)),
-                  decoration: InputDecoration(
-                    labelText: tr('name'),
-                    labelStyle: GoogleFonts.poppins(
-                      color: const Color(0xFF5A5A72),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.person_outline_rounded,
-                      color: Color(0xFF5A5A72),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF7F7F7),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                // Phone field
-                TextField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  style: GoogleFonts.poppins(color: const Color(0xFF1C1C1E)),
-                  decoration: InputDecoration(
-                    labelText: tr('phone'),
-                    labelStyle: GoogleFonts.poppins(
-                      color: const Color(0xFF5A5A72),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.phone_outlined,
-                      color: Color(0xFF5A5A72),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF7F7F7),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: isSaving
-                        ? null
-                        : () async {
-                            setSheetState(() => isSaving = true);
-                            final ok = await auth.updateUserProfile(
-                              name: nameCtrl.text.trim().isEmpty
-                                  ? null
-                                  : nameCtrl.text.trim(),
-                              phone: phoneCtrl.text.trim(),
-                              photoFile: pickedFile,
-                            );
-                            if (ctx.mounted) Navigator.pop(ctx);
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  ok
-                                      ? tr('profile_updated')
-                                      : (auth.errorMessage ?? 'Update failed'),
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                backgroundColor: ok
-                                    ? const Color(0xFF00C853)
-                                    : Colors.red,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            );
-                          },
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Text(
-                            tr('save'),
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _emailVerificationBanner(AuthProvider auth) {
     return Container(
@@ -1477,258 +1350,670 @@ class _RecommendCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// COMPARE EQUIPMENT SCREEN
+// USER PAYMENT SHEET — UPI / Bank / Card (same as owner side)
 // ═══════════════════════════════════════════════════════════════
-class _CompareEquipmentScreen extends StatefulWidget {
-  const _CompareEquipmentScreen();
+class _UserPaymentSheet extends StatefulWidget {
+  final String uid;
+  const _UserPaymentSheet({required this.uid});
+
   @override
-  State<_CompareEquipmentScreen> createState() =>
-      _CompareEquipmentScreenState();
+  State<_UserPaymentSheet> createState() => _UserPaymentSheetState();
 }
 
-class _CompareEquipmentScreenState extends State<_CompareEquipmentScreen> {
-  dynamic _leftEq;
-  dynamic _rightEq;
-
-  static const _bg = Color(0xFFF7F7F7);
+class _UserPaymentSheetState extends State<_UserPaymentSheet> {
   static const _accent = Color(0xFF3B82F6);
   static const _dark = Color(0xFF1A1A2E);
   static const _sub = Color(0xFF8F90A6);
-  static const _card = Colors.white;
+  static const _green = Color(0xFF00C853);
 
-  void _pickEquipment(bool isLeft, List<dynamic> all) async {
-    final picked = await showModalBottomSheet<dynamic>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Select Equipment',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              itemCount: all.length,
-              itemBuilder: (ctx, i) {
-                final eq = all[i];
-                return ListTile(
-                  leading: const Icon(Icons.construction_rounded),
-                  title: Text(
-                    '${eq.brand} ${eq.machineType.value}',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    '₹${eq.hourlyRate.toStringAsFixed(0)}/hr · ${eq.district}',
-                    style: GoogleFonts.poppins(fontSize: 12, color: _sub),
-                  ),
-                  onTap: () => Navigator.pop(ctx, eq),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-    if (picked != null) {
+  int _step = 0; // 0 = method select, 1 = success
+  bool _loading = false;
+  final _utrCtrl = TextEditingController();
+  String? _utrError;
+  String _selectedMethod = 'upi'; // 'upi', 'bank', 'card'
+
+  // Card form controllers
+  final _cardNumCtrl = TextEditingController();
+  final _cardNameCtrl = TextEditingController();
+  final _cardExpiryCtrl = TextEditingController();
+  final _cardCvvCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _utrCtrl.dispose();
+    _cardNumCtrl.dispose();
+    _cardNameCtrl.dispose();
+    _cardExpiryCtrl.dispose();
+    _cardCvvCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirmPayment() async {
+    final utr = _utrCtrl.text.trim();
+    if (utr.length < 6) {
+      setState(
+        () => _utrError =
+            'Enter a valid transaction / UTR reference (min 6 chars)',
+      );
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _utrError = null;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.uid)
+          .collection('payments')
+          .add({
+            'amount': 0, // amount filled by booking context
+            'method': _selectedMethod,
+            'utr': utr,
+            'status': 'pending',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+      if (!mounted) return;
       setState(() {
-        if (isLeft) {
-          _leftEq = picked;
-        } else {
-          _rightEq = picked;
-        }
+        _loading = false;
+        _step = 1;
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _utrError = 'Could not record payment. Please try again.';
+      });
+    }
+  }
+
+  Future<void> _launchUpiApp(String appUri) async {
+    final uri = Uri.parse(appUri);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      const genericUpi =
+          'upi://pay?pa=vishalkhadatare1-1@okicici&pn=SEEMP+Platform&cu=INR';
+      final fallback = Uri.parse(genericUpi);
+      if (await canLaunchUrl(fallback)) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'App not installed. Please pay via UPI ID: vishalkhadatare1-1@okicici and enter UTR below.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _accent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    context.locale;
-    return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
-        backgroundColor: _bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: _dark),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          tr('compare_equipment'),
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: _dark,
-          ),
-        ),
-        centerTitle: true,
+    return Container(
+      margin: const EdgeInsets.only(top: 60),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      body: Consumer<equip_svc.EquipmentProvider>(
-        builder: (ctx, prov, _) {
-          final all = prov.allEquipment;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Selector row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _picker(
-                        'Equipment A',
-                        _leftEq,
-                        () => _pickEquipment(true, all),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: _accent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.compare_arrows_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _picker(
-                        'Equipment B',
-                        _rightEq,
-                        () => _pickEquipment(false, all),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                if (_leftEq != null && _rightEq != null) ...[
-                  _compareRow(
-                    'Type',
-                    _leftEq.machineType.value,
-                    _rightEq.machineType.value,
-                  ),
-                  _compareRow('Brand', _leftEq.brand, _rightEq.brand),
-                  _compareRow('Model', _leftEq.model, _rightEq.model),
-                  _compareRow(
-                    'Hourly Rate',
-                    '₹${_leftEq.hourlyRate.toStringAsFixed(0)}',
-                    '₹${_rightEq.hourlyRate.toStringAsFixed(0)}',
-                    betterLeft: _leftEq.hourlyRate <= _rightEq.hourlyRate,
-                  ),
-                  _compareRow(
-                    'Rating',
-                    _leftEq.rating.toStringAsFixed(1),
-                    _rightEq.rating.toStringAsFixed(1),
-                    betterLeft: _leftEq.rating >= _rightEq.rating,
-                  ),
-                  _compareRow('Location', _leftEq.district, _rightEq.district),
-                  if (_leftEq.enginePower.isNotEmpty ||
-                      _rightEq.enginePower.isNotEmpty)
-                    _compareRow(
-                      'Engine Power',
-                      _leftEq.enginePower.isEmpty ? '—' : _leftEq.enginePower,
-                      _rightEq.enginePower.isEmpty ? '—' : _rightEq.enginePower,
-                    ),
-                  if (_leftEq.bucketCapacity.isNotEmpty ||
-                      _rightEq.bucketCapacity.isNotEmpty)
-                    _compareRow(
-                      'Bucket Capacity',
-                      _leftEq.bucketCapacity.isEmpty
-                          ? '—'
-                          : _leftEq.bucketCapacity,
-                      _rightEq.bucketCapacity.isEmpty
-                          ? '—'
-                          : _rightEq.bucketCapacity,
-                    ),
-                  if (_leftEq.operatingWeight.isNotEmpty ||
-                      _rightEq.operatingWeight.isNotEmpty)
-                    _compareRow(
-                      'Op. Weight',
-                      _leftEq.operatingWeight.isEmpty
-                          ? '—'
-                          : _leftEq.operatingWeight,
-                      _rightEq.operatingWeight.isEmpty
-                          ? '—'
-                          : _rightEq.operatingWeight,
-                    ),
-                  if (_leftEq.depth.isNotEmpty || _rightEq.depth.isNotEmpty)
-                    _compareRow(
-                      'Depth',
-                      _leftEq.depth.isEmpty ? '—' : _leftEq.depth,
-                      _rightEq.depth.isEmpty ? '—' : _rightEq.depth,
-                    ),
-                  if (_leftEq.soilType.isNotEmpty ||
-                      _rightEq.soilType.isNotEmpty)
-                    _compareRow(
-                      'Soil Type',
-                      _leftEq.soilType.isEmpty ? '—' : _leftEq.soilType,
-                      _rightEq.soilType.isEmpty ? '—' : _rightEq.soilType,
-                    ),
-                ] else
-                  Container(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.compare_rounded,
-                          size: 60,
-                          color: _accent.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Select two equipment to compare',
-                          style: GoogleFonts.poppins(fontSize: 14, color: _sub),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: _step == 0 ? _buildPaymentStep() : _buildSuccessStep(),
+        ),
       ),
     );
   }
 
-  Widget _picker(String label, dynamic eq, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
+  // ── Payment method selection & form ───────────────────────────
+  Widget _buildPaymentStep() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Header
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: _accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.payment_rounded,
+                  color: _accent,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('payment_methods'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: _dark,
+                      ),
+                    ),
+                    Text(
+                      'Choose your preferred payment method',
+                      style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Method selector tabs
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F8),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                _methodChip('upi', Icons.account_balance_wallet_rounded, 'UPI'),
+                _methodChip('bank', Icons.account_balance_rounded, 'Bank'),
+                _methodChip('card', Icons.credit_card_rounded, 'Card'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (_selectedMethod == 'upi') ..._upiContent(),
+          if (_selectedMethod == 'bank') ..._bankContent(),
+          if (_selectedMethod == 'card') ..._cardContent(),
+          const SizedBox(height: 16),
+          // UTR / Reference input
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F4FF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _accent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_rounded,
+                      size: 16,
+                      color: _accent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Enter Transaction / UTR Reference',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _accent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _utrCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 425678901234',
+                    hintStyle: GoogleFonts.poppins(color: _sub, fontSize: 13),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _accent, width: 1.5),
+                    ),
+                    errorText: _utrError,
+                    prefixIcon: const Icon(
+                      Icons.tag_rounded,
+                      size: 18,
+                      color: _accent,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _dark,
+                  ),
+                  keyboardType: TextInputType.text,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Confirm button
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _confirmPayment,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: _loading
+                      ? null
+                      : const LinearGradient(
+                          colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                  color: _loading ? _accent.withValues(alpha: 0.5) : null,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: _loading
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: _accent.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+                child: Center(
+                  child: _loading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.lock_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Confirm & Submit',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.verified_user_rounded, size: 12, color: _sub),
+              const SizedBox(width: 4),
+              Text(
+                '256-bit secured · Verified within 24 hrs',
+                style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _methodChip(String method, IconData icon, String label) {
+    final selected = _selectedMethod == method;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedMethod = method),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(2),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.18),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: selected ? _accent : _sub),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? _accent : _sub,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── UPI Content ───────────────────────────────────────────────
+  List<Widget> _upiContent() {
+    const upiId = 'vishalkhadatare1-1@okicici';
+    const baseParams = 'pa=$upiId&pn=SEEMP+Platform&cu=INR';
+
+    return [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _card,
+          gradient: LinearGradient(
+            colors: [
+              _accent.withValues(alpha: 0.08),
+              _accent.withValues(alpha: 0.03),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _accent.withValues(alpha: 0.4), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: _accent.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.qr_code_2_rounded,
+                size: 26,
+                color: _accent,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'UPI ID',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: _sub,
+                      letterSpacing: 0.8,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    upiId,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _dark,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00C853),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'SEEMP Platform',
+                        style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 18),
+      Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: _accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Pay via UPI App',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _dark,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          Expanded(
+            child: _upiAppButton(
+              label: 'PhonePe',
+              imagePath: 'assets/images/phonepe_icon.png',
+              bgColor: const Color(0xFF5F259F),
+              uri: 'phonepe://pay?$baseParams',
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _upiAppButton(
+              label: 'GPay',
+              imagePath: 'assets/images/gpay_icon.png',
+              bgColor: Colors.white,
+              uri: 'tez://upi/pay?$baseParams',
+              hasBorder: true,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _upiAppButton(
+              label: 'Paytm',
+              imagePath: 'assets/images/paytm_icon.png',
+              bgColor: const Color(0xFF002970),
+              uri: 'paytmmp://pay?$baseParams',
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _launchUpiApp('upi://pay?$baseParams'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_accent, _accent.withValues(alpha: 0.8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Any UPI',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F8),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, size: 14, color: _sub),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Tap an app to pay directly. Enter UTR below after payment.',
+                style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _upiAppButton({
+    required String label,
+    required String imagePath,
+    required Color bgColor,
+    required String uri,
+    bool hasBorder = false,
+  }) {
+    return GestureDetector(
+      onTap: () => _launchUpiApp(uri),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE0E0E0)),
+          border: hasBorder
+              ? Border.all(color: const Color(0xFFE0E0E0), width: 1.5)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: bgColor == Colors.white
+                  ? Colors.black.withValues(alpha: 0.08)
+                  : bgColor.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              eq == null
-                  ? Icons.add_circle_outline_rounded
-                  : Icons.construction_rounded,
-              color: _accent,
-              size: 28,
+            Image.asset(
+              imagePath,
+              width: 32,
+              height: 32,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.payment_rounded,
+                size: 28,
+                color: hasBorder ? _dark : Colors.white,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
-              eq == null ? label : '${eq.brand}\n${eq.machineType.value}',
+              label,
               style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _dark,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: hasBorder ? _dark : Colors.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1738,60 +2023,321 @@ class _CompareEquipmentScreenState extends State<_CompareEquipmentScreen> {
     );
   }
 
-  Widget _compareRow(
-    String label,
-    String left,
-    String right, {
-    bool? betterLeft,
-  }) {
-    final leftColor = betterLeft == null
-        ? _dark
-        : (betterLeft ? const Color(0xFF00C853) : _sub);
-    final rightColor = betterLeft == null
-        ? _dark
-        : (!betterLeft ? const Color(0xFF00C853) : _sub);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(12),
+  // ── Bank Transfer Content ─────────────────────────────────────
+  List<Widget> _bankContent() {
+    return [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F8),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            _bankRow('Bank Name', 'State Bank of India'),
+            const SizedBox(height: 8),
+            _bankRow('Account Number', '1234 5678 9012'),
+            const SizedBox(height: 8),
+            _bankRow('IFSC Code', 'SBIN0001234'),
+            const SizedBox(height: 8),
+            _bankRow('Account Name', 'SEEMP Technologies Pvt Ltd'),
+          ],
+        ),
       ),
-      child: Row(
+      const SizedBox(height: 16),
+      Text(
+        'Transfer the amount and enter UTR/reference number below:',
+        style: GoogleFonts.poppins(fontSize: 12, color: _sub),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _bankRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: _sub)),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _dark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Credit / Debit Card Content ───────────────────────────────
+  List<Widget> _cardContent() {
+    return [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A1A2E), Color(0xFF3A3A5C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'SEEMP',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const Icon(
+                  Icons.credit_card_rounded,
+                  color: Colors.white70,
+                  size: 24,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              _cardNumCtrl.text.isEmpty
+                  ? '•••• •••• •••• ••••'
+                  : _cardNumCtrl.text,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CARD HOLDER',
+                      style: GoogleFonts.poppins(
+                        fontSize: 8,
+                        color: Colors.white54,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      _cardNameCtrl.text.isEmpty
+                          ? 'YOUR NAME'
+                          : _cardNameCtrl.text.toUpperCase(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'EXPIRES',
+                      style: GoogleFonts.poppins(
+                        fontSize: 8,
+                        color: Colors.white54,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      _cardExpiryCtrl.text.isEmpty
+                          ? 'MM/YY'
+                          : _cardExpiryCtrl.text,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      _cardField(
+        _cardNumCtrl,
+        'Card Number',
+        '1234 5678 9012 3456',
+        TextInputType.number,
+        maxLen: 19,
+      ),
+      const SizedBox(height: 10),
+      _cardField(
+        _cardNameCtrl,
+        'Cardholder Name',
+        'John Doe',
+        TextInputType.name,
+      ),
+      const SizedBox(height: 10),
+      Row(
         children: [
           Expanded(
-            child: Text(
-              left,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: leftColor,
-              ),
-              textAlign: TextAlign.center,
+            child: _cardField(
+              _cardExpiryCtrl,
+              'Expiry (MM/YY)',
+              'MM/YY',
+              TextInputType.datetime,
+              maxLen: 5,
             ),
           ),
-          Container(
-            width: 80,
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(fontSize: 11, color: _sub),
-              textAlign: TextAlign.center,
-            ),
-          ),
+          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              right,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: rightColor,
-              ),
-              textAlign: TextAlign.center,
+            child: _cardField(
+              _cardCvvCtrl,
+              'CVV',
+              '•••',
+              TextInputType.number,
+              maxLen: 3,
+              obscure: true,
             ),
           ),
         ],
       ),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F0FE),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _accent.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline_rounded, size: 15, color: _accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Card payments are verified manually. After paying, enter the bank transaction reference number below.',
+                style: GoogleFonts.poppins(fontSize: 11, color: _accent),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _cardField(
+    TextEditingController ctrl,
+    String label,
+    String hint,
+    TextInputType type, {
+    int? maxLen,
+    bool obscure = false,
+  }) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: type,
+      obscureText: obscure,
+      maxLength: maxLen,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: GoogleFonts.poppins(fontSize: 12, color: _sub),
+        hintStyle: GoogleFonts.poppins(color: _sub, fontSize: 12),
+        filled: true,
+        fillColor: const Color(0xFFF5F5F8),
+        counterText: '',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _accent, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+      ),
+      style: GoogleFonts.poppins(fontSize: 13, color: _dark),
+    );
+  }
+
+  // ── Success Step ──────────────────────────────────────────────
+  Widget _buildSuccessStep() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16),
+        Center(
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _green.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              color: _green,
+              size: 48,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Payment Submitted!',
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: _dark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Your payment has been recorded.\nIt will be verified within 24 hours.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontSize: 13, color: _sub, height: 1.5),
+        ),
+        const SizedBox(height: 32),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'Done',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

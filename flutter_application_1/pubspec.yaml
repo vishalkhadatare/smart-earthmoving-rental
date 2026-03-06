@@ -57,6 +57,7 @@ dev_dependencies:
   riverpod_generator: ^2.6.3
   build_runner: ^2.4.14
   json_serializable: ^6.9.4
+  flutter_launcher_icons: ^0.14.1
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -97,3 +98,12 @@ flutter_native_splash:
   android_12:
     color: "#0A0C1A"
     color_dark: "#0A0C1A"
+
+# ── App Launcher Icon ──
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_icon.png"

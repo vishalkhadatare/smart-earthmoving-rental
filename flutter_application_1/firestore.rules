@@ -22,7 +22,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isOwner(userId);
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
 
       // ── User favorites subcollection ──
       match /favorites/{equipmentId} {
@@ -37,7 +37,7 @@ service cloud.firestore {
       // Provider can create/update their own profile
       allow create: if isAuthenticated() && isOwner(providerId);
       allow update: if isAuthenticated() && (isOwner(providerId) || isAdmin());
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (isOwner(providerId) || isAdmin());
     }
 
     // ── Equipment collection ──
@@ -75,7 +75,10 @@ service cloud.firestore {
         (resource.data.providerId == request.auth.uid ||
          resource.data.userId == request.auth.uid ||
          isAdmin());
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() &&
+        (resource.data.providerId == request.auth.uid ||
+         resource.data.userId == request.auth.uid ||
+         isAdmin());
     }
 
     // ── Payments collection ──

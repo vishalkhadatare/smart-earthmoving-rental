@@ -20,8 +20,7 @@ import '../../equipment/screens/add_equipment_screen.dart';
 import '../../equipment/screens/owner_equipment_detail_screen.dart';
 import '../../equipment/services/equipment_service.dart' as equip_svc;
 import '../../home/models/equipment_model.dart';
-import '../../home/widgets/equipment_image.dart'
-    show EquipmentImage;
+import '../../home/widgets/equipment_image.dart' show EquipmentImage;
 // ─────────────────────────────────────────────────────────────
 // Owner Shell — 4-tab bottom nav
 //  Dashboard · Equipment · Bookings · Profile
@@ -39,14 +38,6 @@ class _OwnerShellState extends State<OwnerShell> {
   static const Color _accent = Color(0xFFFF6B00);
   static const Color _sub = Color(0xFFBBBBCC);
 
-<<<<<<< HEAD
-  final List<Widget> _pages = const [
-    _OwnerDashboard(),
-    _OwnerEquipment(),
-    _OwnerBookings(),
-    _OwnerProfile(),
-  ];
-=======
   late final List<Widget> _pages;
 
   @override
@@ -60,7 +51,6 @@ class _OwnerShellState extends State<OwnerShell> {
       _OwnerProfile(onSwitchTab: (i) => setState(() => _idx = i)),
     ];
   }
->>>>>>> 30bced0 (Update project files)
 
   @override
   Widget build(BuildContext context) {
@@ -86,18 +76,36 @@ class _OwnerShellState extends State<OwnerShell> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-<<<<<<< HEAD
-                _nav(Icons.dashboard_rounded, 'Dashboard', 0),
-                _nav(Icons.construction_rounded, 'Equipment', 1),
-                _nav(Icons.event_note_rounded, 'Bookings', 2),
-                _nav(Icons.person_outline_rounded, 'Profile', 3),
-=======
-                _nav(Icons.dashboard_rounded, tr('dashboard'), 0),
-                _nav(Icons.construction_rounded, tr('equipment'), 1),
-                _nav(Icons.event_note_rounded, tr('bookings'), 2),
-                _nav(Icons.notifications_none_rounded, tr('notifications'), 3),
-                _nav(Icons.person_outline_rounded, tr('profile'), 4),
->>>>>>> 30bced0 (Update project files)
+                _nav(
+                  Icons.grid_view_outlined,
+                  Icons.grid_view_rounded,
+                  tr('dashboard'),
+                  0,
+                ),
+                _nav(
+                  Icons.precision_manufacturing_outlined,
+                  Icons.precision_manufacturing_rounded,
+                  tr('equipment'),
+                  1,
+                ),
+                _nav(
+                  Icons.event_note_outlined,
+                  Icons.event_note_rounded,
+                  tr('bookings'),
+                  2,
+                ),
+                _nav(
+                  Icons.notifications_outlined,
+                  Icons.notifications_rounded,
+                  tr('notifications'),
+                  3,
+                ),
+                _nav(
+                  Icons.person_outline_rounded,
+                  Icons.person_rounded,
+                  tr('profile'),
+                  4,
+                ),
               ],
             ),
           ),
@@ -106,7 +114,7 @@ class _OwnerShellState extends State<OwnerShell> {
     );
   }
 
-  Widget _nav(IconData icon, String label, int i) {
+  Widget _nav(IconData iconOutlined, IconData iconFilled, String label, int i) {
     final on = _idx == i;
     return GestureDetector(
       onTap: () => setState(() => _idx = i),
@@ -115,19 +123,28 @@ class _OwnerShellState extends State<OwnerShell> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: on ? _accent.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          color: on ? _accent.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22, color: on ? _accent : _sub),
-            const SizedBox(height: 3),
+            AnimatedScale(
+              scale: on ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: Icon(
+                on ? iconFilled : iconOutlined,
+                size: 24,
+                color: on ? _accent : _sub,
+              ),
+            ),
+            const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: on ? FontWeight.w600 : FontWeight.w500,
                 color: on ? _accent : _sub,
               ),
             ),
@@ -195,8 +212,6 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
               // Greeting
               Row(
                 children: [
-<<<<<<< HEAD
-=======
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,42 +234,24 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                       ],
                     ),
                   ),
->>>>>>> 30bced0 (Update project files)
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: _accent,
-                    child: Text(
-                      auth.userName.isNotEmpty
-                          ? auth.userName[0].toUpperCase()
-                          : 'O',
-                      style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  GestureDetector(
+                    onTap: () => widget.onSwitchTab(4),
+                    child: CircleAvatar(
+                      radius: 24,
+                      backgroundColor: _accent,
+                      child: Text(
+                        auth.userName.isNotEmpty
+                            ? auth.userName[0].toUpperCase()
+                            : 'O',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hello, ${auth.userName.split(' ').first}!',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: _dark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Equipment Owner',
-                          style: GoogleFonts.poppins(fontSize: 12, color: _sub),
-                        ),
-                      ],
-                    ),
-                  ),
                   GestureDetector(
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -271,8 +268,11 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                         ),
                       );
                     },
-                    child: const Icon(Icons.favorite_border_rounded,
-                        color: _sub, size: 24),
+                    child: const Icon(
+                      Icons.favorite_border_rounded,
+                      color: _sub,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   GestureDetector(
@@ -284,8 +284,11 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                     ),
                     child: Stack(
                       children: [
-                        const Icon(Icons.notifications_none_rounded,
-                            color: _sub, size: 24),
+                        const Icon(
+                          Icons.notifications_none_rounded,
+                          color: _sub,
+                          size: 24,
+                        ),
                         if (notifProv.unseenCount > 0)
                           Positioned(
                             top: -4,
@@ -443,116 +446,15 @@ class _OwnerDashboardState extends State<_OwnerDashboard> {
                 ),
               ),
               const SizedBox(height: 12),
-<<<<<<< HEAD
-              Center(
-                child: Column(
-                  children: [
-                    _quickAction(
-                      Icons.add_circle_rounded,
-                      'Add\nEquipment',
-                      _accent,
-                      () => Navigator.push(
-=======
               Row(
                 children: [
                   _quickAction(
                     Icons.add_circle_rounded,
                     'Add\nEquipment',
                     _accent,
-                    () async {
-                      await Navigator.push(
->>>>>>> 30bced0 (Update project files)
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AddEquipmentScreen(),
-                        ),
-<<<<<<< HEAD
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Equipment Status Dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _card,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.inventory_rounded, color: _blue, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Equipment Status: ',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: _sub,
-                            ),
-                          ),
-                          DropdownButton<String>(
-                            value: 'Available',
-                            underline: const SizedBox.shrink(),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Available',
-                                child: Text('Available'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Rented',
-                                child: Text('Rented'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Under Maintenance',
-                                child: Text('Under Maintenance'),
-                              ),
-                            ],
-                            onChanged: (String? value) {
-                              if (value != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Status changed to $value',
-                                      style: GoogleFonts.poppins(),
-                                    ),
-                                    backgroundColor: _accent,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-=======
-                      );
-                      _reload();
-                    },
+                    () => _checkDepositAndNavigate(context, _reload),
                   ),
-                  const SizedBox(width: 12),
-                  _quickAction(
-                    Icons.business_rounded,
-                    'Register\nProvider',
-                    _blue,
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ProviderRegistrationScreen(),
->>>>>>> 30bced0 (Update project files)
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
               const SizedBox(height: 24),
 
@@ -1075,13 +977,7 @@ class _OwnerEquipmentState extends State<_OwnerEquipment> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab_post_equipment',
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddEquipmentScreen()),
-          );
-          _load();
-        },
+        onPressed: () => _checkDepositAndNavigate(context, _load),
         backgroundColor: _accent,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(
@@ -1763,19 +1659,6 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                   tr('edit_profile'),
                   onTap: () => _showEditProfileSheet(auth),
                 ),
-<<<<<<< HEAD
-=======
-                _M(
-                  Icons.business_rounded,
-                  tr('register_as_provider'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ProviderRegistrationScreen(),
-                    ),
-                  ),
-                ),
->>>>>>> 30bced0 (Update project files)
               ]),
               const SizedBox(height: 14),
               _section(tr('general'), [
@@ -1786,20 +1669,8 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                 ),
                 _M(
                   Icons.notifications_none_rounded,
-<<<<<<< HEAD
-                  'Notifications',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificationsScreen(),
-                      ),
-                    );
-                  },
-=======
                   tr('notifications'),
                   onTap: () => widget.onSwitchTab(3),
->>>>>>> 30bced0 (Update project files)
                 ),
                 _M(
                   Icons.payment_outlined,
@@ -1903,6 +1774,147 @@ class _OwnerProfileState extends State<_OwnerProfile> {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Delete account
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final result = await showDialog<Map<String, dynamic>?>(
+                      context: context,
+                      builder: (ctx) {
+                        String pwd = '';
+                        return StatefulBuilder(
+                          builder: (ctx2, setDialogState) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            title: Text(
+                              'Delete Account',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1A1A2E),
+                              ),
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'This will permanently delete your account, all your equipment listings, and related bookings. This action cannot be undone.',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: const Color(0xFF8F90A6),
+                                  ),
+                                ),
+                                if (auth.isEmailPasswordUser) ...[
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    obscureText: true,
+                                    onChanged: (v) =>
+                                        setDialogState(() => pwd = v),
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          'Enter your password to confirm',
+                                      labelStyle: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 12,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, null),
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF8F90A6),
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed:
+                                    (auth.isEmailPasswordUser && pwd.isEmpty)
+                                    ? null
+                                    : () => Navigator.pop(ctx, {'pwd': pwd}),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEF4444),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Delete',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                    if (result == null) return;
+                    final success = await auth.deleteAccount(
+                      password: (result['pwd'] as String).isEmpty
+                          ? null
+                          : result['pwd'] as String,
+                    );
+                    if (!mounted) return;
+                    if (!success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            auth.errorMessage ?? 'Account deletion failed.',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          backgroundColor: const Color(0xFFEF4444),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(
+                    Icons.delete_forever_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  label: Text(
+                    'Delete Account',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEF4444),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -2303,4 +2315,1271 @@ class _M {
   final String title;
   final VoidCallback? onTap;
   const _M(this.icon, this.title, {this.onTap});
+}
+
+// ─────────────────────────────────────────────────────────────
+// Deposit gate — checks if owner paid ₹10,000 before listing
+// ─────────────────────────────────────────────────────────────
+
+/// Checks deposit status. Shows payment sheet if not paid; otherwise
+/// navigates directly to AddEquipmentScreen.
+Future<void> _checkDepositAndNavigate(
+  BuildContext context,
+  VoidCallback onDone,
+) async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return;
+
+  // Check Firestore for prior deposit payment
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .get();
+  final depositPaid = doc.data()?['depositPaid'] == true;
+
+  if (!context.mounted) return;
+
+  if (depositPaid) {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddEquipmentScreen()),
+    );
+    onDone();
+    return;
+  }
+
+  // Not paid — show payment sheet
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _DepositPaymentSheet(
+      uid: uid,
+      onPaid: () async {
+        if (!context.mounted) return;
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AddEquipmentScreen()),
+        );
+        onDone();
+      },
+    ),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Deposit Payment Bottom Sheet
+// ─────────────────────────────────────────────────────────────
+class _DepositPaymentSheet extends StatefulWidget {
+  final String uid;
+  final Future<void> Function() onPaid;
+  const _DepositPaymentSheet({required this.uid, required this.onPaid});
+
+  @override
+  State<_DepositPaymentSheet> createState() => _DepositPaymentSheetState();
+}
+
+class _DepositPaymentSheetState extends State<_DepositPaymentSheet> {
+  static const _accent = Color(0xFFFF6B00);
+  static const _dark = Color(0xFF1A1A2E);
+  static const _sub = Color(0xFF8F90A6);
+  static const _green = Color(0xFF00C853);
+
+  // 0 = info screen, 1 = UPI payment, 2 = success
+  int _step = 0;
+  bool _loading = false;
+  final _utrCtrl = TextEditingController();
+  String? _utrError;
+  String _selectedMethod = 'upi'; // 'upi', 'bank', or 'card'
+
+  // Card form controllers
+  final _cardNumCtrl = TextEditingController();
+  final _cardNameCtrl = TextEditingController();
+  final _cardExpiryCtrl = TextEditingController();
+  final _cardCvvCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _utrCtrl.dispose();
+    _cardNumCtrl.dispose();
+    _cardNameCtrl.dispose();
+    _cardExpiryCtrl.dispose();
+    _cardCvvCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirmPayment() async {
+    final utr = _utrCtrl.text.trim();
+    if (utr.length < 6) {
+      setState(
+        () => _utrError =
+            'Enter a valid transaction / UTR reference (min 6 chars)',
+      );
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _utrError = null;
+    });
+
+    try {
+      // Record deposit in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(widget.uid).set({
+        'depositPaid': true,
+        'depositAmount': 10000,
+        'depositUTR': utr,
+        'depositMethod': _selectedMethod,
+        'depositPaidAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _step = 2; // success
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _utrError = 'Could not verify payment. Please try again.';
+      });
+    }
+  }
+
+  Future<void> _launchUpiApp(String appUri) async {
+    final uri = Uri.parse(appUri);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      // Fallback to generic UPI intent
+      const genericUpi =
+          'upi://pay?pa=vishalkhadatare1-1@okicici&pn=SEEMP+Platform&am=10000&cu=INR&tn=OwnerDeposit';
+      final fallback = Uri.parse(genericUpi);
+      if (await canLaunchUrl(fallback)) {
+        await launchUrl(fallback, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'App not installed. Please pay via UPI ID: vishalkhadatare1-1@okicici and enter UTR below.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _accent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 60),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: _step == 0
+              ? _buildInfoStep()
+              : _step == 1
+              ? _buildPaymentStep()
+              : _buildSuccessStep(),
+        ),
+      ),
+    );
+  }
+
+  // ── Step 0: Why deposit is required ──────────────────────────
+  Widget _buildInfoStep() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Shield icon
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.shield_rounded, color: _accent, size: 38),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              'Security Deposit Required',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _dark,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'One-time refundable deposit',
+              style: GoogleFonts.poppins(fontSize: 13, color: _sub),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Amount chip
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B00), Color(0xFFFF9A44)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  '₹10,000',
+                  style: GoogleFonts.poppins(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'One-Time Refundable Deposit',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Why is this required?',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _dark,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _bullet(
+            Icons.verified_user_rounded,
+            'Prevents fraudulent listings',
+            'Fake owners register and add equipment leading to scams. This deposit ensures only genuine owners list equipment.',
+          ),
+          const SizedBox(height: 10),
+          _bullet(
+            Icons.lock_rounded,
+            'Fully refundable',
+            'Your ₹10,000 deposit is 100% refundable if you close your account with no active disputes.',
+          ),
+          const SizedBox(height: 10),
+          _bullet(
+            Icons.star_rate_rounded,
+            'One-time payment',
+            'Pay once and list unlimited equipment. No recurring charges for adding more machines.',
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: () => setState(() => _step = 1),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Pay Deposit & Continue',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              'Secured by SEEMP · 256-bit encrypted',
+              style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bullet(IconData icon, String title, String desc) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: _accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: _accent, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _dark,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(desc, style: GoogleFonts.poppins(fontSize: 12, color: _sub)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Step 1: Payment screen ────────────────────────────────────
+  Widget _buildPaymentStep() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Header row
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => setState(() => _step = 0),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: _accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_rounded,
+                    size: 16,
+                    color: _accent,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Complete Payment',
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: _dark,
+                    ),
+                  ),
+                  Text(
+                    'One-time refundable deposit',
+                    style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Amount badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6B00), Color(0xFFFF9A44)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '₹10,000',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Method selector tabs
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F8),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                _methodChip('upi', Icons.account_balance_wallet_rounded, 'UPI'),
+                _methodChip('bank', Icons.account_balance_rounded, 'Bank'),
+                _methodChip('card', Icons.credit_card_rounded, 'Card'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (_selectedMethod == 'upi') ..._upiContent(),
+          if (_selectedMethod == 'bank') ..._bankContent(),
+          if (_selectedMethod == 'card') ..._cardContent(),
+          const SizedBox(height: 16),
+          // UTR / Reference input
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8F3),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _accent.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long_rounded,
+                      size: 16,
+                      color: _accent,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Enter Transaction / UTR Reference',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _accent,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _utrCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 425678901234',
+                    hintStyle: GoogleFonts.poppins(color: _sub, fontSize: 13),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: _accent, width: 1.5),
+                    ),
+                    errorText: _utrError,
+                    prefixIcon: const Icon(
+                      Icons.tag_rounded,
+                      size: 18,
+                      color: _accent,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: _dark,
+                  ),
+                  keyboardType: TextInputType.text,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Confirm button
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _confirmPayment,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: _loading
+                      ? null
+                      : const LinearGradient(
+                          colors: [Color(0xFFFF6B00), Color(0xFFFF9A44)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                  color: _loading ? _accent.withValues(alpha: 0.5) : null,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: _loading
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: _accent.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                ),
+                child: Center(
+                  child: _loading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.lock_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Confirm & Submit',
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.verified_user_rounded, size: 12, color: _sub),
+              const SizedBox(width: 4),
+              Text(
+                '256-bit secured · Verified within 24 hrs',
+                style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _methodChip(String method, IconData icon, String label) {
+    final selected = _selectedMethod == method;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedMethod = method),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(2),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.18),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: selected ? _accent : _sub),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                  color: selected ? _accent : _sub,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _upiContent() {
+    const upiId = 'vishalkhadatare1-1@okicici';
+    const baseParams =
+        'pa=$upiId&pn=SEEMP+Platform&am=10000&cu=INR&tn=OwnerDeposit';
+
+    return [
+      // ── UPI ID card with gradient ──────────────────────────────
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              _accent.withValues(alpha: 0.08),
+              _accent.withValues(alpha: 0.03),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _accent.withValues(alpha: 0.4), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: _accent.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.qr_code_2_rounded,
+                size: 26,
+                color: _accent,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'UPI ID',
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: _sub,
+                      letterSpacing: 0.8,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    upiId,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _dark,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF00C853),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'SEEMP Platform · ₹10,000',
+                        style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 18),
+      // ── App selector label ─────────────────────────────────────
+      Row(
+        children: [
+          Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: _accent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Pay via UPI App',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _dark,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      // ── UPI App buttons with real PNG icons ────────────────────
+      Row(
+        children: [
+          // PhonePe
+          Expanded(
+            child: _upiAppButton(
+              label: 'PhonePe',
+              imagePath: 'assets/images/phonepe_icon.png',
+              bgColor: const Color(0xFF5F259F),
+              uri: 'phonepe://pay?$baseParams',
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Google Pay
+          Expanded(
+            child: _upiAppButton(
+              label: 'GPay',
+              imagePath: 'assets/images/gpay_icon.png',
+              bgColor: Colors.white,
+              uri: 'tez://upi/pay?$baseParams',
+              hasBorder: true,
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Paytm
+          Expanded(
+            child: _upiAppButton(
+              label: 'Paytm',
+              imagePath: 'assets/images/paytm_icon.png',
+              bgColor: const Color(0xFF002970),
+              uri: 'paytmmp://pay?$baseParams',
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Any UPI
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _launchUpiApp('upi://pay?$baseParams'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_accent, _accent.withValues(alpha: 0.8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accent.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Any UPI',
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      // Instruction
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F8),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline_rounded, size: 14, color: _sub),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Tap an app to pay ₹10,000 directly. Enter UTR below after payment.',
+                style: GoogleFonts.poppins(fontSize: 11, color: _sub),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _upiAppButton({
+    required String label,
+    required String imagePath,
+    required Color bgColor,
+    required String uri,
+    bool hasBorder = false,
+  }) {
+    return GestureDetector(
+      onTap: () => _launchUpiApp(uri),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          border: hasBorder
+              ? Border.all(color: const Color(0xFFE0E0E0), width: 1.5)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: bgColor == Colors.white
+                  ? Colors.black.withValues(alpha: 0.08)
+                  : bgColor.withValues(alpha: 0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              imagePath,
+              width: 32,
+              height: 32,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.payment_rounded,
+                size: 28,
+                color: hasBorder ? _dark : Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: hasBorder ? _dark : Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _bankContent() {
+    return [
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F8),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            _bankRow('Bank Name', 'State Bank of India'),
+            const SizedBox(height: 8),
+            _bankRow('Account Number', '1234 5678 9012'),
+            const SizedBox(height: 8),
+            _bankRow('IFSC Code', 'SBIN0001234'),
+            const SizedBox(height: 8),
+            _bankRow('Account Name', 'SEEMP Technologies Pvt Ltd'),
+            const SizedBox(height: 8),
+            _bankRow('Amount', '₹10,000'),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      Text(
+        'Transfer ₹10,000 and enter UTR/reference number below:',
+        style: GoogleFonts.poppins(fontSize: 12, color: _sub),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _bankRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: GoogleFonts.poppins(fontSize: 12, color: _sub)),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _dark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Credit / Debit Card ───────────────────────────────────────
+  List<Widget> _cardContent() {
+    return [
+      // Live card preview
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A1A2E), Color(0xFF3A3A5C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'SEEMP',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const Icon(
+                  Icons.credit_card_rounded,
+                  color: Colors.white70,
+                  size: 24,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              _cardNumCtrl.text.isEmpty
+                  ? '•••• •••• •••• ••••'
+                  : _cardNumCtrl.text,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CARD HOLDER',
+                      style: GoogleFonts.poppins(
+                        fontSize: 8,
+                        color: Colors.white54,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      _cardNameCtrl.text.isEmpty
+                          ? 'YOUR NAME'
+                          : _cardNameCtrl.text.toUpperCase(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'EXPIRES',
+                      style: GoogleFonts.poppins(
+                        fontSize: 8,
+                        color: Colors.white54,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      _cardExpiryCtrl.text.isEmpty
+                          ? 'MM/YY'
+                          : _cardExpiryCtrl.text,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 14),
+      // Card number
+      _cardField(
+        _cardNumCtrl,
+        'Card Number',
+        '1234 5678 9012 3456',
+        TextInputType.number,
+        maxLen: 19,
+      ),
+      const SizedBox(height: 10),
+      // Cardholder name
+      _cardField(
+        _cardNameCtrl,
+        'Cardholder Name',
+        'John Doe',
+        TextInputType.name,
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          Expanded(
+            child: _cardField(
+              _cardExpiryCtrl,
+              'Expiry (MM/YY)',
+              'MM/YY',
+              TextInputType.datetime,
+              maxLen: 5,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _cardField(
+              _cardCvvCtrl,
+              'CVV',
+              '•••',
+              TextInputType.number,
+              maxLen: 3,
+              obscure: true,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _accent.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline_rounded, size: 15, color: _accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Card payments are verified manually. After paying, enter the bank transaction reference number below.',
+                style: GoogleFonts.poppins(fontSize: 11, color: _accent),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 8),
+    ];
+  }
+
+  Widget _cardField(
+    TextEditingController ctrl,
+    String label,
+    String hint,
+    TextInputType type, {
+    int? maxLen,
+    bool obscure = false,
+  }) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: type,
+      obscureText: obscure,
+      maxLength: maxLen,
+      onChanged: (_) => setState(() {}),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: GoogleFonts.poppins(fontSize: 12, color: _sub),
+        hintStyle: GoogleFonts.poppins(color: _sub, fontSize: 12),
+        filled: true,
+        fillColor: const Color(0xFFF5F5F8),
+        counterText: '',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _accent, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
+      ),
+      style: GoogleFonts.poppins(fontSize: 13, color: _dark),
+    );
+  }
+
+  // ── Step 2: success ───────────────────────────────────────────
+  Widget _buildSuccessStep() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16),
+        Center(
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: _green.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              color: _green,
+              size: 48,
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Deposit Confirmed!',
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: _dark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Your ₹10,000 deposit has been recorded.\nYou can now add your equipment.',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(fontSize: 13, color: _sub, height: 1.5),
+        ),
+        const SizedBox(height: 32),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // close sheet
+              widget.onPaid();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _green,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'Add Equipment Now',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
 }

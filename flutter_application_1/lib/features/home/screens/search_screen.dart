@@ -24,6 +24,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   String _searchQuery = '';
   int _selectedCategoryIndex = 0;
+  String _selectedStatus =
+      'All'; // 'All', 'Active', 'Under Maintenance', 'Inactive'
   final TextEditingController _searchController = TextEditingController();
 
   List<EquipmentModel> get _filteredEquipment {
@@ -34,6 +36,14 @@ class _SearchScreenState extends State<SearchScreen> {
     final cat = EquipmentModel.categories[_selectedCategoryIndex];
     if (cat != 'All') {
       items = items.where((e) => e.category == cat).toList();
+    }
+    if (_selectedStatus != 'All') {
+      final statusKey = _selectedStatus == 'Active'
+          ? 'active'
+          : _selectedStatus == 'Under Maintenance'
+          ? 'maintenance'
+          : 'inactive';
+      items = items.where((e) => e.machineStatus == statusKey).toList();
     }
     if (_searchQuery.isNotEmpty) {
       items = items
@@ -67,6 +77,103 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  void _showFilterSheet() {
+    const statuses = ['All', 'Active', 'Under Maintenance', 'Inactive'];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setSheet) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Filter by Status',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: _dark,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: statuses.map((status) {
+                  final isSelected = _selectedStatus == status;
+                  Color chipColor;
+                  switch (status) {
+                    case 'Active':
+                      chipColor = const Color(0xFF00C853);
+                      break;
+                    case 'Under Maintenance':
+                      chipColor = const Color(0xFFFFB800);
+                      break;
+                    case 'Inactive':
+                      chipColor = const Color(0xFFEF4444);
+                      break;
+                    default:
+                      chipColor = _accent;
+                  }
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedStatus = status);
+                      setSheet(() {});
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? chipColor : const Color(0xFFF5F5F8),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? chipColor
+                              : const Color(0xFFE0E0E0),
+                        ),
+                      ),
+                      child: Text(
+                        status,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isSelected ? Colors.white : _dark,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     context.locale; // rebuild on locale change
@@ -81,6 +188,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _buildAppBar(),
             _buildSearchBar(),
             _buildCategoryChips(),
+            _buildStatusChips(),
             // Results count
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
@@ -173,24 +281,27 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: _card,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.filter_list_rounded,
-              size: 20,
-              color: _dark,
+          GestureDetector(
+            onTap: _showFilterSheet,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: _selectedStatus != 'All' ? _accent : _card,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.filter_list_rounded,
+                size: 20,
+                color: _selectedStatus != 'All' ? Colors.white : _dark,
+              ),
             ),
           ),
         ],
@@ -217,18 +328,16 @@ class _SearchScreenState extends State<SearchScreen> {
         child: TextField(
           controller: _searchController,
           onChanged: (v) => setState(() => _searchQuery = v),
-          style: GoogleFonts.poppins(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500),
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
           cursorColor: _accent,
           decoration: InputDecoration(
-<<<<<<< HEAD
-            hintText: 'Search equipment, model, provider...',
-            hintStyle: GoogleFonts.poppins(fontSize: 14, color: Colors.white70),
-            prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70, size: 22),
-=======
             hintText: tr('search_equipment_placeholder'),
             hintStyle: GoogleFonts.poppins(fontSize: 14, color: _sub),
             prefixIcon: const Icon(Icons.search_rounded, color: _sub, size: 22),
->>>>>>> 30bced0 (Update project files)
             suffixIcon: _searchQuery.isNotEmpty
                 ? GestureDetector(
                     onTap: () {
@@ -245,6 +354,64 @@ class _SearchScreenState extends State<SearchScreen> {
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChips() {
+    const statuses = ['All', 'Active', 'Under Maintenance', 'Inactive'];
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: SizedBox(
+        height: 36,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: statuses.length,
+          itemBuilder: (context, index) {
+            final status = statuses[index];
+            final isSelected = _selectedStatus == status;
+            Color chipColor;
+            switch (status) {
+              case 'Active':
+                chipColor = const Color(0xFF00C853);
+                break;
+              case 'Under Maintenance':
+                chipColor = const Color(0xFFFFB800);
+                break;
+              case 'Inactive':
+                chipColor = const Color(0xFFEF4444);
+                break;
+              default:
+                chipColor = _accent;
+            }
+            return GestureDetector(
+              onTap: () => setState(() => _selectedStatus = status),
+              child: Container(
+                margin: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? chipColor : _card,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isSelected ? chipColor : const Color(0xFFE8E8E8),
+                  ),
+                ),
+                child: Text(
+                  status,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    color: isSelected ? Colors.white : _sub,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

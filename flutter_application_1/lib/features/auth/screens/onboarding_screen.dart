@@ -102,17 +102,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: _accent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.precision_manufacturing_rounded,
-                            size: 16,
-                            color: Colors.white,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            'assets/images/app_logo.jpeg',
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.contain,
                           ),
                         ),
                         const SizedBox(width: 8),

@@ -5,8 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart' as legacy;
+import 'core/services/favorites_service.dart';
+import 'core/services/notifications_service.dart';
+import 'core/services/stats_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/user/providers/user_profile_provider.dart';
+import 'features/booking/services/booking_service.dart';
+import 'features/equipment/services/equipment_service.dart';
 import 'firebase_options.dart';
 import 'routes/app_router.dart';
 
@@ -45,37 +52,8 @@ Future<void> main() async {
   final authProvider = AuthProvider();
 
   runApp(
-<<<<<<< HEAD
-    ProviderScope(
-      child: legacy.MultiProvider(
-        providers: [
-          legacy.ChangeNotifierProvider<AuthProvider>.value(
-            value: authProvider,
-          ),
-          legacy.ChangeNotifierProvider<EquipmentProvider>(
-            create: (_) => EquipmentProvider(),
-          ),
-          legacy.ChangeNotifierProvider<BookingProvider>(
-            create: (_) => BookingProvider(),
-          ),
-          legacy.ChangeNotifierProvider<FavoritesProvider>(
-            create: (_) => FavoritesProvider(),
-          ),
-          legacy.ChangeNotifierProvider<StatsProvider>(
-            create: (_) => StatsProvider(),
-          ),
-          legacy.ChangeNotifierProvider<NotificationsProvider>(
-            create: (_) => NotificationsProvider(),
-          ),
-        ],
-        child: const EquipProApp(),
-=======
     EasyLocalization(
-      supportedLocales: const [
-        Locale('en'), // English
-        Locale('hi'), // Hindi
-        Locale('mr'), // Marathi
-      ],
+      supportedLocales: const [Locale('en'), Locale('hi'), Locale('mr')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       startLocale: const Locale('en'),
@@ -97,10 +75,15 @@ Future<void> main() async {
             legacy.ChangeNotifierProvider<StatsProvider>(
               create: (_) => StatsProvider(),
             ),
+            legacy.ChangeNotifierProvider<NotificationsProvider>(
+              create: (_) => NotificationsProvider(),
+            ),
+            legacy.ChangeNotifierProvider<UserProfileProvider>(
+              create: (_) => UserProfileProvider(),
+            ),
           ],
           child: const EquipProApp(),
         ),
->>>>>>> 30bced0 (Update project files)
       ),
     ),
   );

@@ -28,6 +28,7 @@ class EquipmentModel {
   final String category;
   final String description;
   final bool isAvailable;
+  final String machineStatus; // 'active', 'maintenance', 'inactive'
   final double rating;
   final int reviewCount;
   final List<String> specs;
@@ -51,6 +52,7 @@ class EquipmentModel {
     required this.category,
     this.description = '',
     this.isAvailable = true,
+    this.machineStatus = 'active',
     this.rating = 4.5,
     this.reviewCount = 0,
     this.specs = const [],
@@ -130,6 +132,7 @@ class EquipmentModel {
       category: category,
       description: fs.description,
       isAvailable: fs.availabilityStatus,
+      machineStatus: fs.machineStatus,
       rating: fs.rating,
       reviewCount: fs.reviewCount,
       specs: fs.specs.isNotEmpty

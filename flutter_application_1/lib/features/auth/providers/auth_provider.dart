@@ -23,6 +23,8 @@ class AuthProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _verificationId;
   bool _isOtpSent = false;
+  int? _forceResendingToken;
+  ConfirmationResult? _webConfirmationResult;
   AccountType? _currentAccountType;
 
   FirebaseAuth? __firebaseAuth;
@@ -61,6 +63,13 @@ class AuthProvider extends ChangeNotifier {
   String? get userPhotoUrl => __firebaseAuth?.currentUser?.photoURL;
 
   String? get userPhone => _cachedPhone;
+
+  /// Whether the current user signed in with email+password (vs Google etc.).
+  bool get isEmailPasswordUser =>
+      __firebaseAuth?.currentUser?.providerData.any(
+        (p) => p.providerId == 'password',
+      ) ??
+      false;
 
   Future<void> loadUserProfile() async {
     await _ensureFirebaseInitialized();
@@ -229,10 +238,12 @@ class AuthProvider extends ChangeNotifier {
             .set(appUser.toMap(), SetOptions(merge: true));
         // Send email verification with deep link settings so user can return to app
         try {
-          await createdUser.sendEmailVerification(ActionCodeSettings(
-            url: '$dynamicLinkDomain/verify?uid=${createdUser.uid}',
-            handleCodeInApp: true,
-          ));
+          await createdUser.sendEmailVerification(
+            ActionCodeSettings(
+              url: '$dynamicLinkDomain/verify?uid=${createdUser.uid}',
+              handleCodeInApp: true,
+            ),
+          );
         } catch (_) {}
       }
 
@@ -427,18 +438,190 @@ class AuthProvider extends ChangeNotifier {
     return signInWithGoogle(); // Same flow as sign in for Google
   }
 
-  /// Phone login is not available.
-  Future<bool> signInWithPhone({required String phoneNumber}) async {
-    _errorMessage = 'Phone login is not available.';
+  Future<void> _completePhoneSignIn({
+    required UserCredential userCredential,
+    required String phoneNumber,
+  }) async {
+    final user = userCredential.user;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-found',
+        message: 'No user returned after phone authentication.',
+      );
+    }
+
+    // Ensure a baseline profile exists so account type routing is stable.
+    final userDocRef = _firestore.collection('users').doc(user.uid);
+    final userDoc = await userDocRef.get();
+    if (!userDoc.exists) {
+      await userDocRef.set({
+        'id': user.uid,
+        'name': user.displayName ?? 'User',
+        'email': user.email ?? '',
+        'phone': phoneNumber,
+        'accountType': AccountType.user.value,
+        'createdAt': DateTime.now().toIso8601String(),
+      }, SetOptions(merge: true));
+    } else {
+      await userDocRef.set({'phone': phoneNumber}, SetOptions(merge: true));
+    }
+
+    await _loadCurrentAccountType(user.uid);
+    _currentAccountType ??= AccountType.user;
+
+    _cachedPhone = phoneNumber;
+    _currentUser = user.phoneNumber ?? user.email;
+    _verificationId = null;
+    _isOtpSent = false;
+    _forceResendingToken = null;
+    _webConfirmationResult = null;
+    _state = AuthState.authenticated;
+    _isLoading = false;
+    _errorMessage = null;
     notifyListeners();
-    return false;
   }
 
-  /// Phone OTP verification is not available.
-  Future<bool> verifyOTP({required String otp}) async {
-    _errorMessage = 'Phone verification is not available.';
+  /// Send OTP to a phone number using Firebase phone auth.
+  Future<bool> signInWithPhone({required String phoneNumber}) async {
+    await _ensureFirebaseInitialized();
+
+    _isLoading = true;
+    _errorMessage = null;
+    _isOtpSent = false;
+    _verificationId = null;
+    _cachedPhone = phoneNumber;
     notifyListeners();
-    return false;
+
+    try {
+      if (kIsWeb) {
+        _webConfirmationResult = await _firebaseAuth.signInWithPhoneNumber(
+          phoneNumber,
+        );
+        _isOtpSent = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      final completer = Completer<bool>();
+
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        forceResendingToken: _forceResendingToken,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          try {
+            final userCredential = await _firebaseAuth.signInWithCredential(
+              credential,
+            );
+            await _completePhoneSignIn(
+              userCredential: userCredential,
+              phoneNumber: phoneNumber,
+            );
+            if (!completer.isCompleted) completer.complete(true);
+          } on FirebaseAuthException catch (e) {
+            _errorMessage = _getFirebaseErrorMessage(e.code);
+            _isLoading = false;
+            notifyListeners();
+            if (!completer.isCompleted) completer.complete(false);
+          } catch (e) {
+            _errorMessage = 'Phone verification failed: ${e.toString()}';
+            _isLoading = false;
+            notifyListeners();
+            if (!completer.isCompleted) completer.complete(false);
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          _errorMessage = _getFirebaseErrorMessage(e.code);
+          _isLoading = false;
+          notifyListeners();
+          if (!completer.isCompleted) completer.complete(false);
+        },
+        codeSent: (String verificationId, int? forceResendingToken) {
+          _verificationId = verificationId;
+          _forceResendingToken = forceResendingToken;
+          _isOtpSent = true;
+          _isLoading = false;
+          notifyListeners();
+          if (!completer.isCompleted) completer.complete(true);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+      );
+
+      return await completer.future;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = _getFirebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Failed to send OTP: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Verify OTP and complete sign-in.
+  Future<bool> verifyOTP({required String otp}) async {
+    await _ensureFirebaseInitialized();
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (kIsWeb) {
+        final confirmationResult = _webConfirmationResult;
+        if (confirmationResult == null) {
+          _errorMessage = 'Please request OTP first.';
+          _isLoading = false;
+          notifyListeners();
+          return false;
+        }
+        final userCredential = await confirmationResult.confirm(otp);
+        final phone = userCredential.user?.phoneNumber ?? '';
+        await _completePhoneSignIn(
+          userCredential: userCredential,
+          phoneNumber: phone,
+        );
+        return true;
+      }
+
+      final verificationId = _verificationId;
+      if (verificationId == null || verificationId.isEmpty) {
+        _errorMessage = 'Please request OTP first.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
+      final phone = userCredential.user?.phoneNumber ?? _cachedPhone ?? '';
+      await _completePhoneSignIn(
+        userCredential: userCredential,
+        phoneNumber: phone,
+      );
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = _getFirebaseErrorMessage(e.code);
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'OTP verification failed: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Resend OTP (sends a fresh token via Appwrite).
@@ -449,8 +632,91 @@ class AuthProvider extends ChangeNotifier {
   /// Reset phone auth state.
   void resetPhoneAuth() {
     _isOtpSent = false;
+    _verificationId = null;
+    _forceResendingToken = null;
+    _webConfirmationResult = null;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// Permanently deletes the owner/user account – Firebase Auth + all Firestore
+  /// documents owned by this user + profile picture from Storage.
+  Future<bool> deleteAccount({String? password}) async {
+    await _ensureFirebaseInitialized();
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return false;
+    final uid = user.uid;
+    try {
+      // Re-authenticate to satisfy Firebase's requires-recent-login requirement
+      final providers = user.providerData.map((p) => p.providerId).toList();
+      if (providers.contains('password')) {
+        if (password == null || password.isEmpty) {
+          _errorMessage = 'Password is required to delete your account.';
+          notifyListeners();
+          return false;
+        }
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: password,
+        );
+        await user.reauthenticateWithCredential(credential);
+      } else if (providers.contains('google.com')) {
+        final googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          _errorMessage = 'Re-authentication required. Please sign in again.';
+          notifyListeners();
+          return false;
+        }
+        _cachedGoogleUser = googleUser;
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        await user.reauthenticateWithCredential(credential);
+      }
+      // 1. Delete all equipment listed by this owner
+      final equipSnap = await _firestore
+          .collection('equipment')
+          .where('providerId', isEqualTo: uid)
+          .get();
+      for (final doc in equipSnap.docs) {
+        await doc.reference.delete();
+      }
+      // 2. Delete bookings where this owner is the provider
+      final bookingSnap = await _firestore
+          .collection('bookings')
+          .where('providerId', isEqualTo: uid)
+          .get();
+      for (final doc in bookingSnap.docs) {
+        await doc.reference.delete();
+      }
+      // 3. Delete profile picture from Storage (ignore errors if missing)
+      try {
+        await FirebaseStorage.instance
+            .ref('profile_pictures/$uid.jpg')
+            .delete();
+      } catch (_) {}
+      // 4. Delete provider profile document (if exists)
+      try {
+        await _firestore.collection('providers').doc(uid).delete();
+      } catch (_) {}
+      // 5. Delete Firestore user document
+      await _firestore.collection('users').doc(uid).delete();
+      // 6. Delete Firebase Auth account
+      await user.delete();
+      // 7. Clean up local state
+      _currentUser = null;
+      _currentAccountType = null;
+      _cachedGoogleUser = null;
+      _state = AuthState.onboarding;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Account deletion failed: ${e.toString()}';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> signOut() async {

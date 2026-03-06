@@ -22,7 +22,6 @@ class _SignupScreenState extends State<SignupScreen>
   final _phoneCtrl = TextEditingController();
   bool _ob1 = true, _ob2 = true, _agreed = false;
   AccountType? _type;
-  
 
   late final AnimationController _entryCtrl;
   late final Animation<double> _headerFade;
@@ -118,7 +117,7 @@ class _SignupScreenState extends State<SignupScreen>
     _passCtrl.dispose();
     _confirmCtrl.dispose();
     _phoneCtrl.dispose();
-    
+
     super.dispose();
   }
 
@@ -457,17 +456,12 @@ class _SignupScreenState extends State<SignupScreen>
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        SizedBox(
           width: 22,
           height: 22,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            gradient: const LinearGradient(colors: [_accent, _accent2]),
-          ),
-          child: const Icon(
-            Icons.precision_manufacturing_rounded,
-            size: 13,
-            color: Colors.white,
+          child: Image.asset(
+            'assets/images/app_logo.jpeg',
+            fit: BoxFit.contain,
           ),
         ),
         const SizedBox(width: 7),
@@ -666,25 +660,7 @@ class _SignupScreenState extends State<SignupScreen>
           },
         ),
         const SizedBox(height: 16),
-<<<<<<< HEAD
-        _label('Phone Number (optional)'),
-        const SizedBox(height: 10),
-        _field(
-          ctrl: _phoneCtrl,
-          hint: '+911234567890',
-          icon: Icons.phone_rounded,
-          kb: TextInputType.phone,
-          validator: (v) {
-            if (v == null || v.isEmpty) return null; // optional
-            if (!v.startsWith('+')) return 'Include country code (e.g., +91)';
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        _label('Password'),
-=======
         _label(tr('password')),
->>>>>>> 30bced0 (Update project files)
         const SizedBox(height: 10),
         _field(
           ctrl: _passCtrl,

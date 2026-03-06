@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:equippro/models/provider_model.dart';
 import 'package:equippro/features/home/models/equipment_model.dart';
 import 'package:equippro/features/home/screens/equipment_details_screen.dart';
 import 'package:equippro/features/home/widgets/equipment_image.dart';

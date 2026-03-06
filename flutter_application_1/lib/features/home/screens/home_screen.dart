@@ -5,9 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:equippro/core/services/notifications_service.dart';
 import 'package:equippro/features/notifications/notifications_screen.dart';
-import 'package:equippro/features/provider/screens/provider_details_screen.dart';
 import 'package:equippro/core/widgets/app_logo.dart';
-import 'package:equippro/features/home/screens/all_equipments_screen.dart';
 import 'package:equippro/core/services/favorites_service.dart';
 import 'package:equippro/core/services/stats_service.dart';
 import 'package:equippro/features/auth/providers/auth_provider.dart';
@@ -93,87 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
-<<<<<<< HEAD
-        child: CustomScrollView(
-          slivers: [
-            // 1. Header
-            SliverToBoxAdapter(child: _buildHeader()),
-            // 2. Search bar
-            SliverToBoxAdapter(child: _buildSearchBar()),
-            // 3. Banner carousel
-            SliverToBoxAdapter(child: _buildBannerCarousel()),
-            // 4. Quick stats
-            SliverToBoxAdapter(child: _buildQuickStats()),
-            // 5. Categories
-            SliverToBoxAdapter(child: _buildCategoryChips()),
-            // 6. Featured equipment with category filters
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                'Featured Equipment',
-                'Top rated',
-                onViewAll: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AllEquipmentsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SliverToBoxAdapter(child: _buildFeaturedCategoryChips()),
-            SliverToBoxAdapter(child: _buildFeaturedEquipment()),
-            // 7. Top Providers
-            SliverToBoxAdapter(
-              child: _buildSectionHeader('Top Providers', 'Trusted'),
-            ),
-            SliverToBoxAdapter(child: _buildTopProviders()),
-            // 8. How it works
-            SliverToBoxAdapter(child: _buildHowItWorks()),
-            // 9. Recently added (horizontal)
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                'Recently Added',
-                'New',
-                onViewAll: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AllEquipmentsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SliverToBoxAdapter(child: _buildRecentlyAdded()),
-            // 10. Available equipment (vertical feed)
-            SliverToBoxAdapter(
-              child: _buildSectionHeader(
-                'All Equipment',
-                '${_filteredEquipment.length} found',
-                onViewAll: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AllEquipmentsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      _buildEquipmentCard(_filteredEquipment[index]),
-                  childCount: _filteredEquipment.length,
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
-          ],
-=======
         child: RefreshIndicator(
           color: const Color(0xFFFF6B00),
           onRefresh: () async {
@@ -247,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           ),
->>>>>>> 30bced0 (Update project files)
         ),
       ),
     );
@@ -867,7 +783,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     EquipmentModel.categories[index],
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                       color: isSelected ? Colors.white : _dark,
                     ),
                   ),
@@ -1084,61 +1002,6 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: providers.length,
         itemBuilder: (context, index) {
           final p = providers[index];
-<<<<<<< HEAD
-          return Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProviderDetailsScreen(provider: p.provider),
-                  ),
-                );
-              },
-              child: Container(
-                width: 150,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _card,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.orange.shade600,
-                      radius: 28,
-                      child: Text(
-                        p.provider.name.isNotEmpty
-                            ? p.provider.name[0].toUpperCase()
-                            : 'P',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      p.provider.name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _dark,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${p.count} ads',
-                      style: GoogleFonts.poppins(fontSize: 11, color: _sub),
-                    ),
-                  ],
-                ),
-=======
           final colors = [
             [const Color(0xFFFF6B00), const Color(0xFFFF9A44)],
             [const Color(0xFF6C63FF), const Color(0xFF8B83FF)],
@@ -1249,12 +1112,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ],
->>>>>>> 30bced0 (Update project files)
               ),
             ),
           );
-        
-return null;},
+        },
       ),
     );
   }
@@ -1754,45 +1615,6 @@ return null;},
               color: _dark,
             ),
           ),
-<<<<<<< HEAD
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: _accentLight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  trailing,
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _accent,
-                  ),
-                ),
-              ),
-              if (onViewAll != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: GestureDetector(
-                    onTap: onViewAll,
-                    child: Text(
-                      'View All',
-                      style: GoogleFonts.poppins(
-                        color: _accent,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-=======
           onViewAll != null
               ? GestureDetector(
                   onTap: onViewAll,
@@ -1833,7 +1655,6 @@ return null;},
                     ),
                   ),
                 ),
->>>>>>> 30bced0 (Update project files)
         ],
       ),
     );

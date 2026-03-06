@@ -354,18 +354,11 @@ class _LoginScreenState extends State<LoginScreen>
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        Image.asset(
+          'assets/images/app_logo.jpeg',
           width: 22,
           height: 22,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            gradient: const LinearGradient(colors: [_accent, _accent2]),
-          ),
-          child: const Icon(
-            Icons.precision_manufacturing_rounded,
-            size: 13,
-            color: Colors.white,
-          ),
+          fit: BoxFit.contain,
         ),
         const SizedBox(width: 7),
         Text(
